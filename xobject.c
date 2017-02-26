@@ -176,10 +176,7 @@ static void print_array(XJson* v, printState* ps) {
     while (child) {
         print_value(child, ps);
         child = child->next;
-        if (child)
-            saveString(ps, ",\n", NULL, 0, XPRO_TNULL);
-        else
-            saveString(ps, "\n", NULL, 0, XPRO_TNULL);
+        saveString(ps, child?",\n":"\n", NULL, 0, XPRO_TNULL);
     }
     saveString(ps, "]", NULL, v->level, v->t);
 }
@@ -190,10 +187,7 @@ static void print_object(XJson* v, printState* ps) {
     while (child) {
         print_value(child, ps);
         child = child->next;
-        if (child)
-            saveString(ps, ",\n", NULL, 0, XPRO_TNULL);
-        else
-            saveString(ps, "\n", NULL, 0, XPRO_TNULL);
+        saveString(ps, child?",\n":"\n", NULL, 0, XPRO_TNULL);
     }
     saveString(ps, "}", NULL, v->level, v->t);
 }
