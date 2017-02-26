@@ -135,12 +135,10 @@ XJson* main_parser(const char* jsonstr) {
     ls.current = getc(&ls);
     
     parser_next(&ls);
-//    long btime = xprotime();
     while (ls.t.token != K_EOF) {
         statement(&ls);
     }
     XJson* json = ls.json;
-//    printf("use time1 %ldms\n", xprotime() - btime);
     xLex_free(&ls);
     
     return json;
