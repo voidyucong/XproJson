@@ -11,6 +11,8 @@
 #include "xlimits.h"
 #include "xmem.h"
 #include <stdlib.h>
+#include <time.h>
+#include <sys/timeb.h>
 
 XJson* xpro_parser(const char* jsonstr) {
     return main_parser(jsonstr);
@@ -76,6 +78,8 @@ int32_t xpro_getObjectSize(XJson* object) {
     return object->child_size;
 }
 
+// create
+
 XJson* xpro_create_null() {
     return create_null();
 }
@@ -100,9 +104,13 @@ XJson* xpro_create_object() {
     return create_object();
 }
 
+// add
+
 void xpro_addItem(XJson* parent, XJson* item) {
     addItem(parent, item);
 }
+
+// detach
 
 XJson* xpro_detachItemInArray(XJson* array, int index) {
     XJson* value = xpro_getItemInArray(array, index);
@@ -136,6 +144,8 @@ XJson* xpro_detachItemInOjbect(XJson* object, const char* key) {
     return value;
 }
 
+// get
+
 XJson* xpro_getItemInArray(XJson* array, int index) {
     XJson* value = array->head;
     while (value && --index > 0) value = value->next;
@@ -145,8 +155,7 @@ XJson* xpro_getItemInArray(XJson* array, int index) {
 XJson* xpro_getItemInObject(XJson* object, const char* key) {
     XJson* value = object->head;
     while (value > 0) {
-        if (value->key && strcmp(value->key, key) == 0)
-            break;
+        if (value->key && strcmp(value->key, key) == 0) break;
         value = value->next;
     }
     return value;
@@ -175,10 +184,17 @@ void xpro_saveFile(const char* fileName, const char* json) {
     fclose(f);
 }
 
-#include <time.h>
+void setErrFunc(ERR_FUNC func) {
+    if (func) errfunc = func;
+}
+
+
 long xprotime()
 {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    struct timeb t;
+    ftime(&t);
+    return 1000 * t.time + t.millitm;
+//    struct timeval tv;
+//    gettimeofday(&tv, NULL);
+//    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }

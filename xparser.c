@@ -22,16 +22,14 @@ static void expr(lexState* ls);
 
 static void check(lexState* ls, int c) {
     if (ls->t.token != c) {
-        printf("missing \"%c\"\n", c);
-        xpro_assert(0);
+        error_msg("Missing \"%c\"\n", c);
     }
 }
 
 static void check_next(lexState* ls, int c) {
     parser_next(ls);
     if (ls->t.token != c) {
-        printf("missing \"%c\"\n", c);
-        xpro_assert(0);
+        error_msg("Missing \"%c\"\n", c);
     }
 }
 
@@ -116,9 +114,7 @@ static void statement(lexState* ls) {
         case K_TRUE: case K_FALSE: statboolean(ls); break;
         case K_STRING: statstring(ls); break;
         case K_NUMERAL: statnumeral(ls); break;
-        default:
-            printf("unexpected expression \"%s\"\n", ls->t.sem.s.str);
-            xpro_assert(0);
+        default: error_msg("Unexpected expression \"%s\"\n", ls->t.sem.s.str);
     }
 }
 

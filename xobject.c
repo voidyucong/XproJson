@@ -8,6 +8,10 @@
 #include "xobject.h"
 #include "xmem.h"
 #include "xlimits.h"
+#include <stdlib.h>
+#include <stdarg.h>
+
+#define MAX_LOG_LEN 16*1024
 
 XJson* create_json() {
     XJson* json = realloc_(XJson, NULL, sizeof(XJson));
@@ -121,7 +125,7 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
         
     }
     ps->buff[ps->n] = '\0';
-    long b = xprotime();
+    
     char* obuff = ps->buff;
     ps->buff += ps->n;
     char temp[totalLen];
@@ -130,13 +134,12 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
     if (addkey) {sprintf(ctemp, "\"%s\":", addkey);ctemp+=strlen(addkey)+3;}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     if (str) {strncpy(ctemp, str, strlen(str));ctemp+=strlen(str);}
-    if (type == XPRO_TNUMBER) {char nstr[64];sprintf(nstr, "%.17g", n);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
+    if (type == XPRO_TNUMBER) {char nstr[32];sprintf(nstr, "%.17g", n);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     *ctemp = '\0';
     ctemp = temp;
     
     ps->n += strlen(ctemp);
-    __times+=xprotime()-b;
     memcpy(ps->buff, temp, strlen(ctemp));
     
     ps->buff = obuff;
@@ -193,30 +196,15 @@ static void print_object(XJson* v, printState* ps) {
 }
 
 static void print_value(XJson* v, printState* ps) {
-    if (!v) {
-        return;
-    }
+    if (!v) return;
     switch (v->t) {
-        case XPRO_TBOOLEAN:
-            print_bool(v, ps);
-            break;
-        case XPRO_TSTRING:
-            print_string(v, ps);
-            break;
-        case XPRO_TNULL:
-            print_null(v, ps);
-            break;
-        case XPRO_TNUMBER:
-            print_numeral(v, ps);
-            break;
-        case XPRO_TARRAY:
-            print_array(v, ps);
-            break;
-        case XPRO_TOBJECT:
-            print_object(v, ps);
-            break;
-        default:
-            break;
+        case XPRO_TBOOLEAN: print_bool(v, ps); break;
+        case XPRO_TSTRING: print_string(v, ps); break;
+        case XPRO_TNULL: print_null(v, ps); break;
+        case XPRO_TNUMBER: print_numeral(v, ps); break;
+        case XPRO_TARRAY: print_array(v, ps); break;
+        case XPRO_TOBJECT: print_object(v, ps); break;
+        default: break;
     }
 }
 
@@ -226,10 +214,18 @@ char* print_json(XJson* json) {
     ps.size = 32;
     ps.buff = realloc_(char, NULL, ps.size);
     print_value(json, &ps);
-    printf("use %ldms\n", __times);
-//    if (ps.buff) {
-//        free(ps.buff);
-//        ps.buff = NULL;
-//    }
+//    printf("use %ldms\n", __times);
     return ps.buff;
+}
+
+
+void error_msg(const char* fmt, ...) {
+    va_list argp;
+    va_start(argp, fmt);
+    char szBuf[MAX_LOG_LEN + 1] = {0};
+    vsnprintf(szBuf, MAX_LOG_LEN, fmt, argp);
+    va_end(argp);
+    
+    printf("%s\n", szBuf);
+    xpro_assert(0);
 }

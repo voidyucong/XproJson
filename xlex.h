@@ -47,4 +47,6 @@ XPRO_API void xLex_init(lexState* ls, const char* source);
 XPRO_API void xLex_free(lexState* ls);
 XPRO_API void parser_next(lexState* ls);
 
+static long partime;
+
 #endif /* defined(__XDoc__xlex__) */

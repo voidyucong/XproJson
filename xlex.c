@@ -74,7 +74,7 @@ static void read_string(lexState* ls, int flag) {
                 break;
             }
             default:
-                if (ls->current == EOF) xpro_assert(0);
+                if (ls->current == EOF) error_msg("unexpected file end");
                 save_and_next(ls, ls->current);
                 break;
         }  // switch
@@ -100,8 +100,9 @@ static void read_number(lexState* ls) {
     ls->t.sem.n = numeral;
     settoken(ls, K_NUMERAL);
 }
-
+static long partime = 0;
 void parser_next(lexState* ls) {
+    
     reset_buff(ls);
 renext:
     switch (ls->current) {
@@ -126,6 +127,7 @@ renext:
         }
         case EOF: {
             settoken(ls, K_EOF);
+            printf("parser time %ldms\n", partime);
             return;
         }
         default: {
@@ -143,9 +145,12 @@ renext:
             break;
         }
     }
+    
+//    long b=xprotime();
     ls->t.sem.s.len = ls->n + 1;
     ls->t.sem.s.str = realloc_(char, NULL, ls->n + 1);
     memcpy(ls->t.sem.s.str, ls->buff, ls->n + 1);
+//    partime+=(xprotime()-b);
 }
 
 void xLex_init(lexState* ls, const char* source) {

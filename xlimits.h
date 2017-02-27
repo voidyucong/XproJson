@@ -11,6 +11,6 @@
 
 #define XPRO_MINBUFFER	32
 
-#define xpro_assert(c) assert(c)
+#define xpro_assert(cond) assert(cond)
 
 #endif /* defined(__XDoc__xlimits__) */

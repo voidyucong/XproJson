@@ -7,6 +7,7 @@
 
 #include "xmem.h"
 #include "xlimits.h"
+#include "xobject.h"
 
 void* xMem_realloc(void* block, size_t size) {
     void* newblock = NULL;
@@ -19,8 +20,7 @@ void* xMem_realloc(void* block, size_t size) {
 //        printf(" n:%x\n", newblock);
     }
     if (newblock == NULL) {
-        printf("memory alloc failed!");
-        xpro_assert(0);
+        error_msg("Memory alloc failed!");
     }
     return newblock;
 }

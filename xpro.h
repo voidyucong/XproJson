@@ -26,19 +26,18 @@ typedef double      xpro_Number;
 typedef long long   xpro_Integer;  // TODO
 typedef int         xpro_Boolean;
 
+typedef void (*ERR_FUNC)(const char*);
+
 typedef union Value_ {
-    struct {
-        char* s;
-        int32_t len;
-    } s;
+    struct {char* s; int32_t len;} s;
     xpro_Boolean b;
     xpro_Number n;
     xpro_Integer i;
 } Value_;
 
 typedef struct XJson {
-    int32_t t;  // type
-    int32_t level;  // 层级
+    int32_t t;
+    int32_t level;
     int32_t child_size;
     union Value_ v;
     struct XJson* next, *prev;
@@ -75,6 +74,8 @@ XPRO_API XJson* xpro_getItemInObject(XJson* object, const char* key);
 XPRO_API void xpro_minify(char* json);
 
 XPRO_API void xpro_saveFile(const char* fileName, const char* json);
+
+XPRO_API void setErrFunc(ERR_FUNC func);
 
 long xprotime();
 
