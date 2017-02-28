@@ -1,10 +1,3 @@
-//
-//  xobject.h
-//
-//  Created by yucong on 17/2/17.
-//  Copyright (c) 2017年 yucong. All rights reserved.
-//
-
 #ifndef __XDoc__xobject__
 #define __XDoc__xobject__
 
@@ -27,7 +20,6 @@ XPRO_API XJson* create_object();
 
 XPRO_API void addItem(XJson* parent, XJson* item);
 
-//XPRO_API void print_value(XJson* v);
 XPRO_API char* print_json(XJson* json);
 
 XPRO_API void error_msg(const char* fmt, ...);

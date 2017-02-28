@@ -1,17 +1,10 @@
-//
-//  xlex.c
-//
-//  Created by yucong on 17/2/16.
-//  Copyright (c) 2017年 yucong. All rights reserved.
-//
-
 #include "xlex.h"
-#include "xmem.h"
-#include "xlimits.h"
-#include "xobject.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "xmem.h"
+#include "xlimits.h"
+#include "xobject.h"
 
 #define TOTAL_LIMITS 3
 const char* const limits[TOTAL_LIMITS] = {
@@ -21,17 +14,19 @@ const char* const limits[TOTAL_LIMITS] = {
 #define reset_buff(ls)  \
  (ls)->n = 0; \
  memset((ls)->buff, 0, (ls)->buffsize); \
-// if ((ls)->t.sem.s.str && (ls)->t.sem.s.len > 0) { \
-//     xMem_free((void*)(ls)->t.sem.s.str); \
-//     (ls)->t.sem.s.str = NULL; \
-// } \
-//(ls)->t.sem.s.len = 0; \
+/* if ((ls)->t.sem.s.str && (ls)->t.sem.s.len > 0) { \ */
+/*     xMem_free((void*)(ls)->t.sem.s.str); \ */
+/*     (ls)->t.sem.s.str = NULL; \ */
+/* } \ */
+/*(ls)->t.sem.s.len = 0; \ */
 
 #define next(ls) ((ls)->current = getc(ls))
 #define save_and_next(ls, c) (save((ls), c), next(ls))
 #define settoken(ls, c) ((ls)->t.token = (c))
 #define isdigit(c) ((c)>='0'&&(c)<='9')
-#define isalpha(c) (((c)>='a'&&(c)<='z')||((c)>='A'&&(c)<='Z'))
+#define isalphaA2Z(c) ((c)>='A'&&(c)<='Z')
+#define isalphaa2z(c) ((c)>='a'&&(c)<='z')
+#define isalpha(c) (isalphaA2Z(c)||isalphaa2z(c))
 
 static void save(lexState* ls, int c) {
     if (ls->n + 1 >= ls->buffsize) {
@@ -41,13 +36,61 @@ static void save(lexState* ls, int c) {
     ls->buff[ls->n++] = (char)c;
 }
 
+static void read_hex4(lexState* ls, unsigned* ucode) {
+    for (int i = 0; i < 4; ++i) {
+        if (isdigit(ls->current)) { *ucode<<=4; *ucode |= (ls->current - '0'); }
+        else if (ls->current >= 'A' && ls->current <= 'F') { *ucode<<=4; *ucode |= (ls->current - 'A') + 10; }
+        else if (ls->current >= 'a' && ls->current <= 'f') { *ucode<<=4; *ucode |= (ls->current - 'a') + 10; }
+        else { *ucode = 0; return; }
+        next(ls);
+    }
+}
+
+static int handle_unicode(lexState* ls) {
+    unsigned ucode = 0;
+    read_hex4(ls, &ucode);
+    if (ucode == 0) return 0;
+    if (ucode >= 0xD800 && ucode <= 0xDBFF) {  /* surrogate pair */
+        if (ls->current != '\\') return 0;
+        next(ls);
+        if (ls->current != 'u') return 0;
+        next(ls);
+        unsigned ucodelow = 0;
+        read_hex4(ls, &ucodelow);
+        if (ucodelow < 0xDC00 || ucodelow > 0xDFFF) return 0;
+        ucode = 0x10000 + (ucode - 0xD800) * 0x400 + (ucodelow - 0xDC00);
+    }
+    return ucode;
+}
+
+static void encodeutf8(lexState* ls, unsigned ucode) {
+    if (ucode <= 0x007F) {  /* 1 byte */
+        save(ls, ucode);
+    }
+    else if (ucode <= 0x7FF) {  /* 2 byte */
+        save(ls, (ucode >> 6) | 0xC0);
+        save(ls, (ucode & 0x3F) | 0x80);
+    }
+    else if (ucode <= 0xFFFF) {  /* 3 byte */
+        save(ls, (ucode >> 12) | 0xE0);
+        save(ls, ((ucode >> 6) & 0x3F) | 0x80);
+        save(ls, (ucode & 0x3F) | 0x80);
+    }
+    else if (ucode <= 0x10FFFF) {  /* 4 byte */
+        save(ls, (ucode >> 18) | 0xF0);
+        save(ls, ((ucode >> 12) & 0x3F) | 0x80);
+        save(ls, ((ucode >> 6) & 0x3F) | 0x80);
+        save(ls, (ucode & 0x3F) | 0x80);
+    }
+}
+
 static void read_string(lexState* ls, int flag) {
     next(ls);
     while (ls->current != flag) {
         switch (ls->current) {
             case '\\': {
                 int c;
-                save_and_next(ls, ls->current);
+                next(ls);
                 switch (ls->current) {
                     case 'a': c = '\a'; goto save_flag;
                     case 'b': c = '\b'; goto save_flag;
@@ -56,26 +99,34 @@ static void read_string(lexState* ls, int flag) {
                     case 'r': c = '\r'; goto save_flag;
                     case 't': c = '\t'; goto save_flag;
                     case 'v': c = '\v'; goto save_flag;
-//                  case 'u': // TODO
+                    case 'u': {
+                        next(ls);
+                        unsigned ucode = handle_unicode(ls);
+                        if (ucode == 0) goto no_save_flag;
+                        encodeutf8(ls, ucode);
+                        goto no_save_flag;
+                    }
                     case '\n': case '\r': case '\\': case '\"': case '\'':
                         c = ls->current;
                         goto save_flag;
                     default:
                         c =ls->current;
                         goto save_flag;
-                }  // switch
+                }  /* switch */
                 break;
             save_flag:
                 save(ls, c);
                 next(ls);
+                break;
+            no_save_flag:
                 break;
             }
             default:
                 if (ls->current == EOF) error_msg("Unexpected end!");
                 save_and_next(ls, ls->current);
                 break;
-        }  // switch
-    }  // while
+        }  /* switch */
+    }  /* while */
     next(ls);
     
     settoken(ls, K_STRING);
@@ -132,7 +183,7 @@ renext:
             } while (isdigit(ls->current) || isalpha(ls->current));
             settoken(ls, K_NAME);
             
-            for (int i = 0; i < TOTAL_LIMITS; ++i) {  // reserverd string?
+            for (int i = 0; i < TOTAL_LIMITS; ++i) {  /* reserverd string? */
                 if (strcmp(limits[i], ls->buff) == 0) {
                     settoken(ls, FIRST_RESERVED + i + 1);
                     break;

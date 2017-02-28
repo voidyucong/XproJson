@@ -1,10 +1,3 @@
-//
-//  xpro.h
-//
-//  Created by yucong on 17/2/15.
-//  Copyright (c) 2017年 yucong. All rights reserved.
-//
-
 #ifndef __XDoc__xpro__
 #define __XDoc__xpro__
 #include "xconf.h"
@@ -15,7 +8,7 @@
 #define XPRO_TNULL          0
 #define XPRO_TBOOLEAN       1
 #define XPRO_TNUMBER		2
-#define XPRO_TINTEGER       3  // TODO
+#define XPRO_TINTEGER       3  /* TODO */
 #define XPRO_TSTRING		4
 #define XPRO_TARRAY         5
 #define XPRO_TOBJECT		6
@@ -23,7 +16,7 @@
 #define XPRO_NUMTAGS		7
 
 typedef double      xpro_Number;
-typedef long long   xpro_Integer;  // TODO
+typedef long long   xpro_Integer;  /* TODO */
 typedef int         xpro_Boolean;
 
 typedef void (*ERR_FUNC)(const char*);

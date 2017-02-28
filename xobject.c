@@ -1,15 +1,8 @@
-//
-//  xobject.c
-//
-//  Created by yucong on 17/2/17.
-//  Copyright (c) 2017年 yucong. All rights reserved.
-//
-
 #include "xobject.h"
-#include "xmem.h"
-#include "xlimits.h"
 #include <stdlib.h>
 #include <stdarg.h>
+#include "xmem.h"
+#include "xlimits.h"
 
 XJson* create_json() {
     XJson* json = realloc_(XJson, NULL, sizeof(XJson));
@@ -86,7 +79,7 @@ void xpro_addItemToObject(XJson* parent, XJson* item, const char* key) {
 }
 
 
-// print
+/* print */
 
 typedef struct printState  {
     char* buff;
@@ -96,16 +89,16 @@ typedef struct printState  {
 
 static long __times = 0;
 static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int depth, int type) {
-    // space
+    /* space */
     char* space = NULL;
     if (depth > 0) {
         depth <<= 1;
         space = realloc_(char, NULL, depth + 1);
         memset(space, ' ', depth);
     }
-    // mark
+    /* mark */
     const char* mark = type == XPRO_TSTRING ? "\"" : NULL;
-    // key
+    /* key */
     const char* addkey = key ? key : NULL;
     
     size_t totalLen = 0;
@@ -123,7 +116,7 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
     ps->buff[ps->n] = '\0';
     
     char* obuff = ps->buff;
-    ps->buff += ps->n;  // to the tail
+    ps->buff += ps->n;  /* to the tail */
     
     char temp[totalLen];
     char* ctemp = temp;
@@ -134,12 +127,12 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
     if (type == XPRO_TNUMBER) {char nstr[32];sprintf(nstr, "%.17g", n);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     *ctemp = '\0';
-    ctemp = temp;  // back to head
+    ctemp = temp;  /* back to head */
     
     ps->n += strlen(ctemp);
     memcpy(ps->buff, temp, strlen(ctemp));
     
-    ps->buff = obuff;  // back to head
+    ps->buff = obuff;  /* back to head */
     ps->buff[ps->n] = '\0';
     if (depth > 0) free(space); space = NULL;
 }
@@ -211,7 +204,7 @@ char* print_json(XJson* json) {
     ps.size = 32;
     ps.buff = realloc_(char, NULL, ps.size);
     print_value(json, &ps);
-//    printf("use %ldms\n", __times);
+/*    printf("use %ldms\n", __times); */
     return ps.buff;
 }
 

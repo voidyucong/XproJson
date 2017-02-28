@@ -1,10 +1,3 @@
-//
-//  xlex.h
-//
-//  Created by yucong on 17/2/16.
-//  Copyright (c) 2017年 yucong. All rights reserved.
-//
-
 #ifndef __XDoc__xlex__
 #define __XDoc__xlex__
 
@@ -28,15 +21,15 @@ typedef struct Token {
 } Token;
 
 typedef struct lexState {
-    int32_t current;  // current position of parser
+    int32_t current;  /* current position of parser */
     int32_t level;
-    int32_t n;  // buff used size
+    int32_t n;  /* buff used size */
     int32_t buffsize;
-    u_long srclen;  // source length
+    u_long srclen;  /* source length */
     Token t;
     XJson* json;
     XJson* curbase;
-    const char* source;  // origin input
+    const char* source;  /* origin input */
     char* buff;
 } lexState;
 

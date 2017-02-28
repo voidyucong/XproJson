@@ -1,20 +1,9 @@
-//
-//  xparser.c
-//
-//  Created by yucong on 17/2/14.
-//  Copyright (c) 2017年 yucong. All rights reserved.
-//
-
 #include "xparser.h"
+#include <string.h>
 #include "xlex.h"
 #include "xlimits.h"
 #include "xobject.h"
 #include "xmem.h"
-#include <string.h>
-
-#define copystr(s, str) \
-    if ((s) == NULL) {s = realloc_(char, NULL, strlen(str) + 1);} \
-    memcpy(s, str, strlen(str) + 1); \
 
 static void expr(lexState* ls);
 
@@ -80,14 +69,13 @@ static void statobject(lexState* ls) {
     ls->curbase = value;
     do {
         parser_next(ls);
-        if (ls->t.token == '}')  // empty object
+        if (ls->t.token == '}')  /* empty object */
             break;
-        xpro_assert(ls->t.token == K_STRING);  // key can only be 'string'
-        char* key = realloc_(char, NULL, strlen(ls->t.sem.s.str) + 1);  // save key
+        xpro_assert(ls->t.token == K_STRING);  /* key can only be 'string' */
+        char* key = realloc_(char, NULL, strlen(ls->t.sem.s.str) + 1);  /* save key */
         memcpy(key, ls->t.sem.s.str, strlen(ls->t.sem.s.str) + 1);
-//        copystr(key, ls->t.sem.s.str);
         check_next(ls, ':');
-        parser_next(ls);  // skip ':'
+        parser_next(ls);  /* skip ':' */
         
         expr(ls);
         XJson* v = ls->curbase->child;

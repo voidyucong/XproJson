@@ -1,18 +1,11 @@
-//
-//  xpro.c
-//
-//  Created by yucong on 17/2/15.
-//  Copyright (c) 2017年 yucong. All rights reserved.
-//
-
 #include "xpro.h"
+#include <stdlib.h>
+#include <time.h>
+#include <sys/timeb.h>
 #include "xparser.h"
 #include "xobject.h"
 #include "xlimits.h"
 #include "xmem.h"
-#include <stdlib.h>
-#include <time.h>
-#include <sys/timeb.h>
 
 XJson* xpro_parser(const char* jsonstr) {
     return main_parser(jsonstr);
@@ -59,7 +52,7 @@ char* xpro_print(XJson* json) {
     return print_json(json);
 }
 
-//  get size
+/* get size */
 
 int32_t xpro_getArraySize(XJson* array) {
     if (array->t != XPRO_TARRAY) return 0;
@@ -71,7 +64,7 @@ int32_t xpro_getObjectSize(XJson* object) {
     return object->child_size;
 }
 
-// create
+/* create */
 
 XJson* xpro_create_null() {
     return create_null();
@@ -97,13 +90,13 @@ XJson* xpro_create_object() {
     return create_object();
 }
 
-// add
+/* add */
 
 void xpro_addItem(XJson* parent, XJson* item) {
     addItem(parent, item);
 }
 
-// detach
+/* detach */
 
 XJson* xpro_detachItemInArray(XJson* array, int index) {
     XJson* value = xpro_getItemInArray(array, index);
@@ -133,7 +126,7 @@ XJson* xpro_detachItemInOjbect(XJson* object, const char* key) {
     return value;
 }
 
-// get
+/* get */
 
 XJson* xpro_getItemInArray(XJson* array, int index) {
     XJson* value = array->head;
@@ -183,7 +176,10 @@ long xprotime()
     struct timeb t;
     ftime(&t);
     return 1000 * t.time + t.millitm;
-//    struct timeval tv;
-//    gettimeofday(&tv, NULL);
-//    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+    /*
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+   */
 }
