@@ -4,6 +4,7 @@
 
 #define XPRO_MINBUFFER	32
 #define MAX_LOG_LEN 16*1024
+#define XPRO_UNICODE_BYTE 4
 
 #if DEBUG == 1
 #define xpro_assert(cond) assert(cond)

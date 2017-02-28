@@ -46,10 +46,11 @@ static void read_hex4(lexState* ls, unsigned* ucode) {
     }
 }
 
-static int handle_unicode(lexState* ls) {
+static int handle_surrogate(lexState* ls) {
     unsigned ucode = 0;
     read_hex4(ls, &ucode);
     if (ucode == 0) return 0;
+    if (ucode >= 0xDC00 && ucode <= 0xDFFF) return 0;
     if (ucode >= 0xD800 && ucode <= 0xDBFF) {  /* surrogate pair */
         if (ls->current != '\\') return 0;
         next(ls);
@@ -101,7 +102,7 @@ static void read_string(lexState* ls, int flag) {
                     case 'v': c = '\v'; goto save_flag;
                     case 'u': {
                         next(ls);
-                        unsigned ucode = handle_unicode(ls);
+                        unsigned ucode = handle_surrogate(ls);
                         if (ucode == 0) goto no_save_flag;
                         encodeutf8(ls, ucode);
                         goto no_save_flag;
