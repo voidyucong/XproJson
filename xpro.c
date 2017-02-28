@@ -166,8 +166,8 @@ void xpro_saveFile(const char* fileName, const char* json) {
     fclose(f);
 }
 
-void setErrFunc(ERR_FUNC func) {
-    if (func) errfunc = func;
+void xpro_setErrFunc(ERR_FUNC func) {
+    setErrFunc(func);
 }
 
 

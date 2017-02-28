@@ -68,7 +68,7 @@ XPRO_API void xpro_minify(char* json);
 
 XPRO_API void xpro_saveFile(const char* fileName, const char* json);
 
-XPRO_API void setErrFunc(ERR_FUNC func);
+XPRO_API void xpro_setErrFunc(ERR_FUNC func);
 
 long xprotime();
 

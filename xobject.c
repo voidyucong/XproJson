@@ -4,6 +4,8 @@
 #include "xmem.h"
 #include "xlimits.h"
 
+static errState es = {NULL};
+
 XJson* create_json() {
     XJson* json = realloc_(XJson, NULL, sizeof(XJson));
     json->t = XPRO_TNULL;
@@ -208,6 +210,9 @@ char* print_json(XJson* json) {
     return ps.buff;
 }
 
+void setErrFunc(ERR_FUNC func) {
+    es.errfunc = func;
+}
 
 void error_msg(const char* fmt, ...) {
     va_list argp;
@@ -216,6 +221,9 @@ void error_msg(const char* fmt, ...) {
     vsnprintf(szBuf, MAX_LOG_LEN, fmt, argp);
     va_end(argp);
     
-    printf("%s\n", szBuf);
+//    printf("%s\n", szBuf);
+    if (es.errfunc) {
+        es.errfunc(szBuf);
+    }
     xpro_assert(0);
 }
