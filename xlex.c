@@ -21,11 +21,11 @@ const char* const limits[TOTAL_LIMITS] = {
 #define reset_buff(ls)  \
  (ls)->n = 0; \
  memset((ls)->buff, 0, (ls)->buffsize); \
- if ((ls)->t.sem.s.str && (ls)->t.sem.s.len > 0) { \
-     xMem_free((void*)(ls)->t.sem.s.str); \
-     (ls)->t.sem.s.str = NULL; \
- } \
-(ls)->t.sem.s.len = 0; \
+// if ((ls)->t.sem.s.str && (ls)->t.sem.s.len > 0) { \
+//     xMem_free((void*)(ls)->t.sem.s.str); \
+//     (ls)->t.sem.s.str = NULL; \
+// } \
+//(ls)->t.sem.s.len = 0; \
 
 #define next(ls) ((ls)->current = getc(ls))
 #define save_and_next(ls, c) (save((ls), c), next(ls))
@@ -44,8 +44,6 @@ static void save(lexState* ls, int c) {
 static void read_string(lexState* ls, int flag) {
     next(ls);
     while (ls->current != flag) {
-        
-        
         switch (ls->current) {
             case '\\': {
                 int c;
@@ -58,8 +56,7 @@ static void read_string(lexState* ls, int flag) {
                     case 'r': c = '\r'; goto save_flag;
                     case 't': c = '\t'; goto save_flag;
                     case 'v': c = '\v'; goto save_flag;
-//                    case 'x': c = readhexaesc(ls); goto read_save;
-//                    case 'u': utf8esc(ls);  goto no_save;
+//                  case 'u': // TODO
                     case '\n': case '\r': case '\\': case '\"': case '\'':
                         c = ls->current;
                         goto save_flag;
@@ -74,7 +71,7 @@ static void read_string(lexState* ls, int flag) {
                 break;
             }
             default:
-                if (ls->current == EOF) error_msg("unexpected file end");
+                if (ls->current == EOF) error_msg("Unexpected end!");
                 save_and_next(ls, ls->current);
                 break;
         }  // switch
@@ -101,8 +98,8 @@ static void read_number(lexState* ls) {
     settoken(ls, K_NUMERAL);
 }
 static long partime = 0;
+static int allocnum = 0;
 void parser_next(lexState* ls) {
-    
     reset_buff(ls);
 renext:
     switch (ls->current) {
@@ -127,7 +124,6 @@ renext:
         }
         case EOF: {
             settoken(ls, K_EOF);
-            printf("parser time %ldms\n", partime);
             return;
         }
         default: {
@@ -136,7 +132,7 @@ renext:
             } while (isdigit(ls->current) || isalpha(ls->current));
             settoken(ls, K_NAME);
             
-            for (int i = 0; i < TOTAL_LIMITS; ++i) {  // 是否保留字符串
+            for (int i = 0; i < TOTAL_LIMITS; ++i) {  // reserverd string?
                 if (strcmp(limits[i], ls->buff) == 0) {
                     settoken(ls, FIRST_RESERVED + i + 1);
                     break;
@@ -146,24 +142,22 @@ renext:
         }
     }
     
-//    long b=xprotime();
-    ls->t.sem.s.len = ls->n + 1;
-    ls->t.sem.s.str = realloc_(char, NULL, ls->n + 1);
+    ensure_(char, ls->t.sem.s.str, ls->t.sem.s.len, ls->n + 1);
+    if (ls->t.sem.s.len < ls->n + 1) ls->t.sem.s.len = ls->n + 1;
     memcpy(ls->t.sem.s.str, ls->buff, ls->n + 1);
-//    partime+=(xprotime()-b);
 }
 
 void xLex_init(lexState* ls, const char* source) {
     ls->current = 0;
     ls->level = 0;
-    ls->len = strlen(source);
+    ls->srclen = strlen(source);
     ls->source = source;
     ls->t.token = 0;
-    ls->t.sem.s.len = 0;
-    ls->t.sem.s.str = NULL;
+    ls->t.sem.s.len = XPRO_MINBUFFER;
+    ls->t.sem.s.str = realloc_(char, NULL, XPRO_MINBUFFER);
     ls->n = 0;
     ls->buffsize = XPRO_MINBUFFER;
-    ls->buff = realloc_(char, NULL, ls->buffsize);
+    ls->buff = realloc_(char, NULL, XPRO_MINBUFFER);
     ls->curbase = NULL;
     ls->json = NULL;
 }
@@ -173,7 +167,7 @@ void xLex_free(lexState* ls) {
         xMem_free((void*)ls->buff);
         ls->buff = NULL;
     }
-    if (ls->t.sem.s.str && ls->t.sem.s.len > 0) {
+    if (ls->t.sem.s.str) {
         xMem_free((void*)ls->t.sem.s.str);
         ls->t.sem.s.str = NULL;
     }

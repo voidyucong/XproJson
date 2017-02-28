@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#define MAX_LOG_LEN 16*1024
-
 XJson* create_json() {
     XJson* json = realloc_(XJson, NULL, sizeof(XJson));
     json->t = XPRO_TNULL;
@@ -28,37 +26,37 @@ XJson* create_json() {
     return json;
 }
 
-XJson* create_null() {
+inline XJson* create_null() {
     XJson* value = create_json();
     value->t = XPRO_TNULL;
     return value;
 }
-XJson* create_bool(int b) {
+inline XJson* create_bool(int b) {
     XJson* value = create_json();
     value->t = XPRO_TBOOLEAN;
     value->v.b = b;
     return value;
 }
-XJson* create_string(const char* str) {
+inline XJson* create_string(const char* str) {
     XJson* value = create_json();
     value->t = XPRO_TSTRING;
     value->v.s.len = (int32_t)strlen(str) + 1;
-    value->v.s.s = realloc_(char, NULL, (unsigned long)value->v.s.len);
+    value->v.s.s = realloc_(char, NULL, (unsigned long)value->v.s.len + 1);
     memcpy(value->v.s.s, str, strlen(str) + 1);
     return value;
 }
-XJson* create_numeral(xpro_Number n) {
+inline XJson* create_numeral(xpro_Number n) {
     XJson* value = create_json();
     value->t = XPRO_TNUMBER;
     value->v.n = n;
     return value;
 }
-XJson* create_array() {
+inline XJson* create_array() {
     XJson* value = create_json();
     value->t = XPRO_TARRAY;
     return value;
 }
-XJson* create_object() {
+inline XJson* create_object() {
     XJson* value = create_json();
     value->t = XPRO_TOBJECT;
     return value;
@@ -98,7 +96,6 @@ typedef struct printState  {
 
 static long __times = 0;
 static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int depth, int type) {
-    
     // space
     char* space = NULL;
     if (depth > 0) {
@@ -115,19 +112,19 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
     totalLen += space?strlen(space):0;
     totalLen += addkey?strlen(addkey)+3:0;
     totalLen += mark?strlen(mark)*2:0;
-    totalLen += str?strlen(str):64;
+    totalLen += str?strlen(str):32;
     
     if (ps->n + totalLen >= ps->size) {
         ps->size *= 1.5;
         if (ps->size < ps->n + totalLen)
             ps->size = (ps->n + totalLen) * 1.5;
         ps->buff = realloc_(char, ps->buff, ps->size);
-        
     }
     ps->buff[ps->n] = '\0';
     
     char* obuff = ps->buff;
-    ps->buff += ps->n;
+    ps->buff += ps->n;  // to the tail
+    
     char temp[totalLen];
     char* ctemp = temp;
     if (space) {strncpy(ctemp, space, strlen(space));ctemp+=depth;}
@@ -137,12 +134,12 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
     if (type == XPRO_TNUMBER) {char nstr[32];sprintf(nstr, "%.17g", n);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     *ctemp = '\0';
-    ctemp = temp;
+    ctemp = temp;  // back to head
     
     ps->n += strlen(ctemp);
     memcpy(ps->buff, temp, strlen(ctemp));
     
-    ps->buff = obuff;
+    ps->buff = obuff;  // back to head
     ps->buff[ps->n] = '\0';
     if (depth > 0) free(space); space = NULL;
 }

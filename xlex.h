@@ -10,17 +10,14 @@
 
 #include "xpro.h"
 
-#define getc(ls) (((ls)->len--)>0 ? *((ls)->source++) : EOF)
+#define getc(ls) (((ls)->srclen--)>0 ? *((ls)->source++) : EOF)
 #define FIRST_RESERVED 257
 enum SYS_RESERVED {
     K_FIRST = FIRST_RESERVED, K_NULL, K_TRUE, K_FALSE, K_STRING, K_NUMERAL, K_NAME, K_EOF
 };
 
-typedef union SemInfo {
-    struct {
-        char* str;
-        int32_t len;
-    } s;
+typedef struct SemInfo {
+    struct { int64_t len; char* str; } s;
     xpro_Number n;
     xpro_Boolean b;
 } SemInfo;
@@ -31,15 +28,15 @@ typedef struct Token {
 } Token;
 
 typedef struct lexState {
-    int32_t current;  // 当前解析string的位置
-    int32_t level;  // 当前层级深度
-    int32_t n;  // str的已使用大小
-    int32_t buffsize;  // str的长度
-    u_long len;  // 当前string的长度
+    int32_t current;  // current position of parser
+    int32_t level;
+    int32_t n;  // buff used size
+    int32_t buffsize;
+    u_long srclen;  // source length
     Token t;
     XJson* json;
     XJson* curbase;
-    const char* source;  // 原始输入
+    const char* source;  // origin input
     char* buff;
 } lexState;
 

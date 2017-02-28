@@ -34,9 +34,7 @@ XJson* xpro_parserFile(const char* fileName) {
 }
 
 static void free_value(XJson* value) {
-    if (value == NULL) {
-        return;
-    }
+    if (value == NULL) return;
     while (value) {
         free_value(value->child);
         XJson* prev = value->prev;
@@ -52,11 +50,8 @@ static void free_value(XJson* value) {
 }
 
 void xpro_free(XJson* json) {
-    if (json == NULL)
-        return;
+    if (json == NULL) return;
     free_value(json);
-    json = NULL;
-    xMem_free(json);
     json = NULL;
 }
 
@@ -67,14 +62,12 @@ char* xpro_print(XJson* json) {
 //  get size
 
 int32_t xpro_getArraySize(XJson* array) {
-    if (array->t != XPRO_TARRAY)
-        return 0;
+    if (array->t != XPRO_TARRAY) return 0;
     return array->child_size;
 }
 
 int32_t xpro_getObjectSize(XJson* object) {
-    if (object->t != XPRO_TOBJECT)
-        return 0;
+    if (object->t != XPRO_TOBJECT) return 0;
     return object->child_size;
 }
 
@@ -118,10 +111,8 @@ XJson* xpro_detachItemInArray(XJson* array, int index) {
     if (value) {
         if (value == array->head) array->head = value->next;
         if (value == array->child) array->child = value->prev;
-        XJson* prev = value->prev;
-        XJson* next = value->next;
-        if (prev) prev->next = next;
-        if (next) next->prev = prev;
+        if (value->prev) value->prev->next = value->next;
+        if (value->next) value->next->prev = value->prev;
         value->prev = value->next = NULL;
     }
     
@@ -134,10 +125,8 @@ XJson* xpro_detachItemInOjbect(XJson* object, const char* key) {
     if (value) {
         if (value == object->head) object->head = value->next;
         if (value == object->child) object->child = value->prev;
-        XJson* prev = value->prev;
-        XJson* next = value->next;
-        if (prev) prev->next = next;
-        if (next) next->prev = prev;
+        if (value->prev) value->prev->next = value->next;
+        if (value->next) value->next->prev = value->prev;
         value->prev = value->next = NULL;
     }
     

@@ -14,33 +14,25 @@
 
 #define copystr(s, str) \
     if ((s) == NULL) {s = realloc_(char, NULL, strlen(str) + 1);} \
-    else if (strlen(s) < strlen(str)) {s = realloc_(char, s, strlen(str) + 1);} \
     memcpy(s, str, strlen(str) + 1); \
 
 static void expr(lexState* ls);
 
 
 static void check(lexState* ls, int c) {
-    if (ls->t.token != c) {
-        error_msg("Missing \"%c\"\n", c);
-    }
+    if (ls->t.token != c) error_msg("Missing \"%c\"", c);
 }
 
 static void check_next(lexState* ls, int c) {
     parser_next(ls);
-    if (ls->t.token != c) {
-        error_msg("Missing \"%c\"\n", c);
-    }
+    if (ls->t.token != c) error_msg("Missing \"%c\"", c);
 }
 
 static void statnull(lexState* ls) {
-    long b=xprotime();
     XJson* value = create_null();
     if (!ls->json) ls->json = ls->curbase = value;
     else addItem(ls->curbase, value);
     parser_next(ls);
-    long e = xprotime()-b;
-    if (e > 0) printf("%s %ld\n", __FUNCTION__, e);
 }
 
 static void statboolean(lexState* ls) {
@@ -91,8 +83,9 @@ static void statobject(lexState* ls) {
         if (ls->t.token == '}')  // empty object
             break;
         xpro_assert(ls->t.token == K_STRING);  // key can only be 'string'
-        const char* key = NULL;  // save key
-        copystr(key, ls->t.sem.s.str);
+        char* key = realloc_(char, NULL, strlen(ls->t.sem.s.str) + 1);  // save key
+        memcpy(key, ls->t.sem.s.str, strlen(ls->t.sem.s.str) + 1);
+//        copystr(key, ls->t.sem.s.str);
         check_next(ls, ':');
         parser_next(ls);  // skip ':'
         
@@ -114,7 +107,7 @@ static void statement(lexState* ls) {
         case K_TRUE: case K_FALSE: statboolean(ls); break;
         case K_STRING: statstring(ls); break;
         case K_NUMERAL: statnumeral(ls); break;
-        default: error_msg("Unexpected expression \"%s\"\n", ls->t.sem.s.str);
+        default: error_msg("Unexpected expression \"%s\"", ls->t.sem.s.str);
     }
 }
 
@@ -131,9 +124,11 @@ XJson* main_parser(const char* jsonstr) {
     ls.current = getc(&ls);
     
     parser_next(&ls);
+    long b = xprotime();
     while (ls.t.token != K_EOF) {
         statement(&ls);
     }
+    printf("%ld\n", xprotime() - b);
     XJson* json = ls.json;
     xLex_free(&ls);
     

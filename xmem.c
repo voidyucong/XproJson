@@ -13,11 +13,8 @@ void* xMem_realloc(void* block, size_t size) {
     void* newblock = NULL;
     if (block == NULL) {
         newblock = malloc(size);
-//        printf("alloc memory %x\n", newblock);
     }else {
-//        printf("realloc memory o:%x", block);
         newblock = realloc(block, size);
-//        printf(" n:%x\n", newblock);
     }
     if (newblock == NULL) {
         error_msg("Memory alloc failed!");
@@ -31,4 +28,11 @@ void xMem_free(void* block) {
         free(block);
         block = NULL;
     }
+}
+
+void* xMem_ensure(void* block, size_t oz, size_t nz) {
+    if (oz < nz) {
+        block = xMem_realloc(block, nz);
+    }
+    return block;
 }
