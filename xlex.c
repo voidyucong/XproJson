@@ -74,7 +74,7 @@ static void encodeutf8(lexState* ls, unsigned ucode) {
         case 4: save(ls, (ucode >> 18) | 0xF0);
         case 3: save(ls, ((ucode >> 12) & 0x3F) | 0x80);
         case 2: save(ls, ((ucode >> 6) & 0x3F) | 0x80);
-        case 1: save(ls, (ucode & 0x3F) | 0x80);
+        case 1: bytelen == 1 ? save(ls, ucode) : save(ls, (ucode & 0x3F) | 0x80);
     }
 }
 
