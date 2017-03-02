@@ -15,7 +15,7 @@ XJson* create_json() {
     json->next = NULL;
     json->key = NULL;
     json->level = 0;
-    json->child_size = 0;
+    json->nchild = 0;
     json->v.s.len = 0;
     json->v.s.s = NULL;
     return json;
@@ -35,7 +35,7 @@ inline XJson* create_bool(int b) {
 inline XJson* create_string(const char* str) {
     XJson* value = create_json();
     value->t = XPRO_TSTRING;
-    value->v.s.len = (int32_t)strlen(str) + 1;
+    value->v.s.len = (int)strlen(str) + 1;
     value->v.s.s = realloc_(char, NULL, (unsigned long)value->v.s.len + 1);
     memcpy(value->v.s.s, str, strlen(str) + 1);
     return value;
@@ -61,7 +61,7 @@ void addItem(XJson* parent, XJson* item) {
     xpro_assert(parent->t == XPRO_TARRAY || parent->t == XPRO_TOBJECT);
     
     item->level = parent->level + 1;
-    parent->child_size++;
+    parent->nchild++;
     if (parent->child == NULL) {
         parent->child = item;
         parent->head = item;
@@ -85,8 +85,8 @@ void xpro_addItemToObject(XJson* parent, XJson* item, const char* key) {
 
 typedef struct printState  {
     char* buff;
-    int32_t n;
-    int32_t size;
+    int n;
+    int size;
 } printState;
 
 static long __times = 0;

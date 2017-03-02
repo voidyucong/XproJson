@@ -142,8 +142,7 @@ static void read_number(lexState* ls) {
     ls->t.sem.n = numeral;
     settoken(ls, K_NUMERAL);
 }
-static long partime = 0;
-static int allocnum = 0;
+
 void parser_next(lexState* ls) {
     reset_buff(ls);
 renext:

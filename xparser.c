@@ -5,6 +5,8 @@
 #include "xobject.h"
 #include "xmem.h"
 
+#define changebase(ls, b) (b?(ls)->curbase=(b):0)
+
 static void expr(lexState* ls);
 
 
@@ -17,46 +19,46 @@ static void check_next(lexState* ls, int c) {
     if (ls->t.token != c) error_msg("Missing \"%c\"", c);
 }
 
+static void checkAddItem(lexState* ls, XJson* item) {
+    if (!ls->json) ls->json = ls->curbase = item;
+    else addItem(ls->curbase, item);
+}
+
 static void statnull(lexState* ls) {
     XJson* value = create_null();
-    if (!ls->json) ls->json = ls->curbase = value;
-    else addItem(ls->curbase, value);
+    checkAddItem(ls, value);
     parser_next(ls);
 }
 
 static void statboolean(lexState* ls) {
     XJson* value = create_bool(strcmp(ls->t.sem.s.str, "true") == 0);
-    if (!ls->json) ls->json = ls->curbase = value;
-    else addItem(ls->curbase, value);
+    checkAddItem(ls, value);
     parser_next(ls);
 }
 
 static void statstring(lexState* ls) {
     XJson* value = create_string(ls->t.sem.s.str);
-    if (!ls->json) ls->json = ls->curbase = value;
-    else addItem(ls->curbase, value);
+    checkAddItem(ls, value);
     parser_next(ls);
 }
 
 static void statnumeral(lexState* ls) {
     XJson* value = create_numeral(ls->t.sem.n);
-    if (!ls->json) ls->json = ls->curbase = value;
-    else addItem(ls->curbase, value);
+    checkAddItem(ls, value);
     parser_next(ls);
 }
 
 static void statarray(lexState* ls) {
     XJson* parent = ls->curbase;
     XJson* value = create_array();
-    if (!ls->json) ls->json = ls->curbase = parent = value;
-    else addItem(ls->curbase, value);
-    ls->curbase = value;
+    checkAddItem(ls, value);
+    changebase(ls, value);
     do {
         parser_next(ls);
         expr(ls);
     } while (ls->t.token == ',');
     
-    ls->curbase = parent;
+    changebase(ls, parent);
     check(ls, ']');
     parser_next(ls);
 }
@@ -64,9 +66,8 @@ static void statarray(lexState* ls) {
 static void statobject(lexState* ls) {
     XJson* parent = ls->curbase;
     XJson* value = create_object();
-    if (!ls->json) ls->json = ls->curbase = parent = value;
-    else addItem(ls->curbase, value);
-    ls->curbase = value;
+    checkAddItem(ls, value);
+    changebase(ls, value);
     do {
         parser_next(ls);
         if (ls->t.token == '}')  /* empty object */
@@ -82,7 +83,7 @@ static void statobject(lexState* ls) {
         v->key = key;
     } while (ls->t.token == ',');
     
-    ls->curbase = parent;
+    changebase(ls, parent);
     check(ls, '}');
     parser_next(ls);
 }

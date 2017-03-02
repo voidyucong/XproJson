@@ -2,7 +2,7 @@
 一个基于 C 的 JSON 解析器。
 
 ## 用法
-只需要包含头文件 `xpro.h`，例如要创建`["json", {"name":"value"}]`：
+只需要包含头文件 `xproJson.h`，例如要创建`["json", {"name":"value"}]`：
 
 ```c
 XJson* array = xpro_create_array();

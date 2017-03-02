@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "xpro.h"
+#include "xproJson.h"
 
 #define realloc_(t, b, n) ((t*)(xMem_realloc(b, n)))
 #define ensure_(t, b, o, n) (b = (t*)xMem_ensure(b, o, n))

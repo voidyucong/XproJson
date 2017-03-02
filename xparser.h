@@ -1,7 +1,7 @@
 #ifndef __XDoc__xparser__
 #define __XDoc__xparser__
 
-#include "xpro.h"
+#include "xproJson.h"
 
 XPRO_API XJson* main_parser(const char* jsonstr);
 

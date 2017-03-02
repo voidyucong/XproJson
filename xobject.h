@@ -1,7 +1,7 @@
 #ifndef __XDoc__xobject__
 #define __XDoc__xobject__
 
-#include "xpro.h"
+#include "xproJson.h"
 
 #define valueboolean(v) ((v)->v.b)
 #define valuestring(v) ((v)->v.s.s)

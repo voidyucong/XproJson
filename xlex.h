@@ -1,7 +1,7 @@
 #ifndef __XDoc__xlex__
 #define __XDoc__xlex__
 
-#include "xpro.h"
+#include "xproJson.h"
 
 #define getc(ls) (((ls)->srclen--)>0 ? *((ls)->source++) : EOF)
 #define FIRST_RESERVED 257
@@ -10,22 +10,22 @@ enum SYS_RESERVED {
 };
 
 typedef struct SemInfo {
-    struct { int64_t len; char* str; } s;
+    struct { int len; char* str; } s;
     xpro_Number n;
     xpro_Boolean b;
 } SemInfo;
 
 typedef struct Token {
-    int32_t token;
+    int token;
     SemInfo sem;
 } Token;
 
 typedef struct lexState {
-    int32_t current;  /* current position of parser */
-    int32_t level;
-    int32_t n;  /* buff used size */
-    int32_t buffsize;
-    u_long srclen;  /* source length */
+    int current;  /* current position of parser */
+    int level;
+    int n;  /* buff used size */
+    int buffsize;
+    unsigned long srclen;  /* source length */
     Token t;
     XJson* json;
     XJson* curbase;
@@ -37,6 +37,5 @@ XPRO_API void xLex_init(lexState* ls, const char* source);
 XPRO_API void xLex_free(lexState* ls);
 XPRO_API void parser_next(lexState* ls);
 
-static long partime;
 
 #endif /* defined(__XDoc__xlex__) */

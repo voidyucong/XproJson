@@ -17,24 +17,26 @@
 
 typedef double      xpro_Number;
 typedef long long   xpro_Integer;  /* TODO */
-typedef int         xpro_Boolean;
+typedef char        xpro_Boolean;
 
 typedef void (*ERR_FUNC)(const char*);
 
 typedef union Value_ {
-    struct {char* s; int32_t len;} s;
+    struct {char* s; int len;} s;
     xpro_Boolean b;
     xpro_Number n;
-    xpro_Integer i;
+//    xpro_Integer i;
 } Value_;
 
 typedef struct XJson {
-    int32_t t;
-    int32_t level;
-    int32_t child_size;
+    int t;
+    int level;
+    int nchild;
+//    int32_t sizechild;  /* TODO */
     union Value_ v;
     struct XJson* next, *prev;
     struct XJson* child, *head;
+//    struct XJson** children;  /* TODO */
     char* key;
 } XJson;
 
@@ -45,8 +47,8 @@ XPRO_API void xpro_free(XJson* json);
 
 XPRO_API char* xpro_print(XJson* json);
 
-XPRO_API int32_t xpro_getArraySize(XJson* array);
-XPRO_API int32_t xpro_getObjectSize(XJson* object);
+XPRO_API int xpro_getArraySize(XJson* array);
+XPRO_API int xpro_getObjectSize(XJson* object);
 
 XPRO_API XJson* xpro_create_null();
 XPRO_API XJson* xpro_create_bool(int b);
@@ -61,12 +63,15 @@ XPRO_API void xpro_addItemToObject(XJson* parent, XJson* item, const char* key);
 XPRO_API XJson* xpro_detachItemInArray(XJson* array, int index);
 XPRO_API XJson* xpro_detachItemInOjbect(XJson* object, const char* key);
 
+XPRO_API void xpro_deleteItemInArray(XJson* array, int index);
+XPRO_API void xpro_deleteItemInOjbect(XJson* object, const char* key);
+
 XPRO_API XJson* xpro_getItemInArray(XJson* array, int index);
 XPRO_API XJson* xpro_getItemInObject(XJson* object, const char* key);
 
 XPRO_API void xpro_minify(char* json);
 
-XPRO_API void xpro_saveFile(const char* fileName, const char* json);
+XPRO_API void xpro_dump(const char* fileName, const char* json);
 
 XPRO_API void xpro_setErrFunc(ERR_FUNC func);
 
