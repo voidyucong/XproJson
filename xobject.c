@@ -9,8 +9,8 @@ static errState es = {NULL};
 XJson* create_json() {
     XJson* json = realloc_(XJson, NULL, sizeof(XJson));
     json->t = XPRO_TNULL;
-    json->child = NULL;
-    json->head = NULL;
+    json->top = NULL;
+    json->stack = NULL;
     json->prev = NULL;
     json->next = NULL;
     json->key = NULL;
@@ -40,7 +40,7 @@ inline XJson* create_string(const char* str) {
     memcpy(value->v.s.s, str, strlen(str) + 1);
     return value;
 }
-inline XJson* create_numeral(xpro_Number n) {
+inline XJson* create_double(xpro_Number n) {
     XJson* value = create_json();
     value->t = XPRO_TNUMBER;
     value->v.n = n;
@@ -62,22 +62,16 @@ void addItem(XJson* parent, XJson* item) {
     
     item->level = parent->level + 1;
     parent->nchild++;
-    if (parent->child == NULL) {
-        parent->child = item;
-        parent->head = item;
+    if (parent->stack == NULL) {
+        parent->top = item;
+        parent->stack = item;
     }
     else {
-        XJson* cur = parent->child;
-        parent->child = item;
+        XJson* cur = parent->top;
+        parent->top = item;
         cur->next = item;
         item->prev = cur;
     }
-}
-
-void xpro_addItemToObject(XJson* parent, XJson* item, const char* key) {
-    item->key = realloc_(char, NULL, strlen(key) + 1);
-    strcpy(item->key, key);
-    addItem(parent, item);
 }
 
 
@@ -166,7 +160,7 @@ static void print_string(XJson* v, printState* ps) {
 }
 
 static void print_array(XJson* v, printState* ps) {
-    XJson* child = v->head;
+    XJson* child = v->stack;
     saveString(ps, "[\n", v->key, v->level, v->t);
     while (child) {
         print_value(child, ps);
@@ -177,7 +171,7 @@ static void print_array(XJson* v, printState* ps) {
 }
 
 static void print_object(XJson* v, printState* ps) {
-    XJson* child = v->head;
+    XJson* child = v->stack;
     saveString(ps, "{\n", v->key, v->level, v->t);
     while (child) {
         print_value(child, ps);
@@ -221,9 +215,6 @@ void error_msg(const char* fmt, ...) {
     vsnprintf(szBuf, MAX_LOG_LEN, fmt, argp);
     va_end(argp);
     
-//    printf("%s\n", szBuf);
-    if (es.errfunc) {
-        es.errfunc(szBuf);
-    }
+    if (es.errfunc) es.errfunc(szBuf);
     xpro_assert(0);
 }

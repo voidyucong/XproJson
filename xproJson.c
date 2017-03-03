@@ -31,11 +31,11 @@ XJson* xpro_parserFile(const char* fileName) {
 static void free_value(XJson* value) {
     if (value == NULL) return;
     while (value) {
-        free_value(value->child);
+        free_value(value->top);
         XJson* prev = value->prev;
         if (value->key) xMem_free((void*)value->key);
         if (value->t==XPRO_TSTRING) xMem_free(value->v.s.s);
-        value->prev = value->next = value->child = value->head = NULL;
+        value->prev = value->next = value->top = value->stack = NULL;
         value->key = NULL;
         xMem_free((void*)value);
         value = prev;
@@ -74,8 +74,12 @@ XJson* xpro_create_bool(int b) {
     return create_bool(b);
 }
 
-XJson* xpro_create_numeral(xpro_Number n) {
-    return create_numeral(n);
+XJson* xpro_create_int(xpro_Integer i) {
+    return create_double(i);  /* TODO */
+}
+
+XJson* xpro_create_double(xpro_Number n) {
+    return create_double(n);
 }
 
 XJson* xpro_create_string(const char* str) {
@@ -92,7 +96,13 @@ XJson* xpro_create_object() {
 
 /* add */
 
-void xpro_addItem(XJson* parent, XJson* item) {
+void xpro_addItemToArray(XJson* parent, XJson* item) {
+    addItem(parent, item);
+}
+
+void xpro_addItemToObject(XJson* parent, XJson* item, const char* key) {
+    item->key = realloc_(char, NULL, strlen(key) + 1);
+    strcpy(item->key, key);
     addItem(parent, item);
 }
 
@@ -101,8 +111,8 @@ void xpro_addItem(XJson* parent, XJson* item) {
 XJson* xpro_detachItemInArray(XJson* array, int index) {
     XJson* value = xpro_getItemInArray(array, index);
     if (value) {
-        if (value == array->head) array->head = value->next;
-        if (value == array->child) array->child = value->prev;
+        if (value == array->stack) array->stack = value->next;
+        if (value == array->top) array->top = value->prev;
         if (value->prev) value->prev->next = value->next;
         if (value->next) value->next->prev = value->prev;
         value->prev = value->next = NULL;
@@ -113,8 +123,8 @@ XJson* xpro_detachItemInArray(XJson* array, int index) {
 XJson* xpro_detachItemInOjbect(XJson* object, const char* key) {
     XJson* value = xpro_getItemInObject(object, key);
     if (value) {
-        if (value == object->head) object->head = value->next;
-        if (value == object->child) object->child = value->prev;
+        if (value == object->stack) object->stack = value->next;
+        if (value == object->top) object->top = value->prev;
         if (value->prev) value->prev->next = value->next;
         if (value->next) value->next->prev = value->prev;
         value->prev = value->next = NULL;
@@ -132,16 +142,17 @@ void xpro_deleteItemInOjbect(XJson* object, const char* key) {
     if (value) xpro_free(value);
 }
 
+
 /* get */
 
 XJson* xpro_getItemInArray(XJson* array, int index) {
-    XJson* value = array->head;
+    XJson* value = array->stack;
     while (value && --index > 0) value = value->next;
     return value;
 }
 
 XJson* xpro_getItemInObject(XJson* object, const char* key) {
-    XJson* value = object->head;
+    XJson* value = object->stack;
     while (value > 0) {
         if (value->key && strcmp(value->key, key) == 0) break;
         value = value->next;

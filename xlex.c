@@ -7,6 +7,7 @@
 #include "xobject.h"
 
 #define TOTAL_LIMITS 3
+
 const char* const limits[TOTAL_LIMITS] = {
     "null", "true", "false"
 };
@@ -14,15 +15,12 @@ const char* const limits[TOTAL_LIMITS] = {
 #define reset_buff(ls)  \
  (ls)->n = 0; \
  memset((ls)->buff, 0, (ls)->buffsize); \
-/* if ((ls)->t.sem.s.str && (ls)->t.sem.s.len > 0) { \ */
-/*     xMem_free((void*)(ls)->t.sem.s.str); \ */
-/*     (ls)->t.sem.s.str = NULL; \ */
-/* } \ */
-/*(ls)->t.sem.s.len = 0; \ */
 
 #define next(ls) ((ls)->current = getc(ls))
 #define save_and_next(ls, c) (save((ls), c), next(ls))
 #define settoken(ls, c) ((ls)->t.token = (c))
+
+
 #define isdigit(c) ((c)>='0'&&(c)<='9')
 #define isalphaA2Z(c) ((c)>='A'&&(c)<='Z')
 #define isalphaa2z(c) ((c)>='a'&&(c)<='z')
@@ -30,7 +28,7 @@ const char* const limits[TOTAL_LIMITS] = {
 
 static void save(lexState* ls, int c) {
     if (ls->n + 1 >= ls->buffsize) {
-        ls->buffsize *= 1.5f;
+        ls->buffsize *= 1.5f;  /* resize */
         ls->buff = realloc_(char, ls->buff, ls->buffsize);
     }
     ls->buff[ls->n++] = (char)c;
