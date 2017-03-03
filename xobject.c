@@ -208,13 +208,19 @@ void setErrFunc(ERR_FUNC func) {
     es.errfunc = func;
 }
 
-void error_msg(const char* fmt, ...) {
-    va_list argp;
-    va_start(argp, fmt);
-    char szBuf[MAX_LOG_LEN + 1] = {0};
-    vsnprintf(szBuf, MAX_LOG_LEN, fmt, argp);
-    va_end(argp);
-    
-    if (es.errfunc) es.errfunc(szBuf);
+void error_msg(const char* msg) {
+    if (es.errfunc) es.errfunc(msg);
     xpro_assert(0);
+}
+
+void error_check(int cond, const char* fmt, ...) {
+    if (!cond) {
+        va_list argp;
+        va_start(argp, fmt);
+        char szBuf[MAX_LOG_LEN + 1] = {0};
+        vsnprintf(szBuf, MAX_LOG_LEN, fmt, argp);
+        va_end(argp);
+        
+        error_msg(szBuf);
+    }
 }
