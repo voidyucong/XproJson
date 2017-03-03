@@ -6,10 +6,10 @@
 
 ```c
 XJson* array = xpro_create_array();
-xpro_addItem(array, xpro_create_string("json"));
+xpro_addStringToArray(array, "json");
 XJson* object = xpro_create_object();
-xpro_addItemToObject(object, xpro_create_string("value"), "name");
-xpro_addItem(array, object);
+xpro_addStringToObject(object, "value", "name");
+xpro_addItemToArray(array, object);
 printf("%s\n", xpro_print(array));
 xpro_free(array);
 ```
