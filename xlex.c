@@ -139,7 +139,7 @@ static void read_number(lexState* ls) {
     if (ls->current == '0') {
         int c = ls->current;
         next(ls);
-        if (isdigit(ls->current)) error_msg("leading 0 is not permitted in numbers");
+        error_check(!isdigit(ls->current), "leading 0 is not permitted in numbers");
         save(ls, c);
     }
     else if (isdigit(ls->current)) {
@@ -164,7 +164,7 @@ static void read_number(lexState* ls) {
     if (ls->current == '.') {
         int c = ls->current;
         next(ls);
-        if (!isdigit(ls->current)) error_check(0, "at least one digit required in fractional part");
+        error_check(isdigit(ls->current), "at least one digit required in fractional part");
         save(ls, c);
         do {
             save_and_next(ls, ls->current);
@@ -175,7 +175,7 @@ static void read_number(lexState* ls) {
     if (ls->current == 'e' || ls->current == 'E') {
         save_and_next(ls, ls->current);
         if (ls->current == '+' || ls->current == '-') save_and_next(ls, ls->current);
-        if (!isdigit(ls->current)) error_check(0, "at least one digit required in exponent");
+        error_check(isdigit(ls->current), "at least one digit required in exponent");
         do {
             save_and_next(ls, ls->current);
         } while (isdigit(ls->current));
