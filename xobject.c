@@ -42,10 +42,18 @@ inline XJson* create_string(const char* str) {
 }
 inline XJson* create_double(xpro_Number n) {
     XJson* value = create_json();
-    value->t = XPRO_TNUMBER;
+    value->t = XPRO_TDOUBLE;
     value->v.n = n;
     return value;
 }
+
+inline XJson* create_integer(xpro_Integer i) {
+    XJson* value = create_json();
+    value->t = XPRO_TINTEGER;
+    value->v.i = i;
+    return value;
+}
+
 inline XJson* create_array() {
     XJson* value = create_json();
     value->t = XPRO_TARRAY;
@@ -84,7 +92,7 @@ typedef struct printState  {
 } printState;
 
 static long __times = 0;
-static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int depth, int type) {
+static void formatJson(printState* ps, char* str, xpro_Number n, xpro_Integer i, char* key, int depth, int type) {
     /* space */
     char* space = NULL;
     if (depth > 0) {
@@ -120,7 +128,8 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
     if (addkey) {sprintf(ctemp, "\"%s\":", addkey);ctemp+=strlen(addkey)+3;}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     if (str) {strncpy(ctemp, str, strlen(str));ctemp+=strlen(str);}
-    if (type == XPRO_TNUMBER) {char nstr[32];sprintf(nstr, "%.17g", n);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
+    if (type == XPRO_TDOUBLE) {char nstr[32];sprintf(nstr, "%.17g", n);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
+    if (type == XPRO_TINTEGER) {char nstr[32];sprintf(nstr, "%d", i);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     *ctemp = '\0';
     ctemp = temp;  /* back to head */
@@ -134,11 +143,15 @@ static void formatJson(printState* ps, char* str, xpro_Number n, char* key, int 
 }
 
 static void saveString(printState* ps, char* str, char* key, int depth, int type) {
-    formatJson(ps, str, 0, key, depth, type);
+    formatJson(ps, str, 0, 0, key, depth, type);
 }
 
-static void saveNumeral(printState* ps, xpro_Number n, char* key, int depth, int type) {
-    formatJson(ps, NULL, n, key, depth, type);
+static void saveDouble(printState* ps, xpro_Number n, char* key, int depth, int type) {
+    formatJson(ps, NULL, n, 0, key, depth, type);
+}
+
+static void saveInteger(printState* ps, xpro_Integer i, char* key, int depth, int type) {
+    formatJson(ps, NULL, 0, i, key, depth, type);
 }
 
 static void print_value(XJson* v, printState* ps);
@@ -151,8 +164,12 @@ static void print_bool(XJson* v, printState* ps) {
     saveString(ps, valueboolean(v) == 1 ? "true" : "false", v->key, v->level, v->t);
 }
 
-static void print_numeral(XJson* v, printState* ps) {
-    saveNumeral(ps, valuenumeral(v), v->key, v->level, v->t);
+static void print_double(XJson* v, printState* ps) {
+    saveDouble(ps, valuedouble(v), v->key, v->level, v->t);
+}
+
+static void print_integer(XJson* v, printState* ps) {
+    saveInteger(ps, valueinteger(v), v->key, v->level, v->t);
 }
 
 static void print_string(XJson* v, printState* ps) {
@@ -187,7 +204,8 @@ static void print_value(XJson* v, printState* ps) {
         case XPRO_TBOOLEAN: print_bool(v, ps); break;
         case XPRO_TSTRING: print_string(v, ps); break;
         case XPRO_TNULL: print_null(v, ps); break;
-        case XPRO_TNUMBER: print_numeral(v, ps); break;
+        case XPRO_TDOUBLE: print_double(v, ps); break;
+        case XPRO_TINTEGER: print_integer(v, ps); break;
         case XPRO_TARRAY: print_array(v, ps); break;
         case XPRO_TOBJECT: print_object(v, ps); break;
         default: break;

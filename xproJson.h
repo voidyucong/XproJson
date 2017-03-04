@@ -7,7 +7,7 @@
 */
 #define XPRO_TNULL          0
 #define XPRO_TBOOLEAN       1
-#define XPRO_TNUMBER		2
+#define XPRO_TDOUBLE		2
 #define XPRO_TINTEGER       3  /* TODO */
 #define XPRO_TSTRING		4
 #define XPRO_TARRAY         5
@@ -25,7 +25,7 @@ typedef union Value_ {
     struct {char* s; int len;} s;
     xpro_Boolean b;
     xpro_Number n;
-//    xpro_Integer i;
+    xpro_Integer i;
 } Value_;
 
 typedef struct XJson {

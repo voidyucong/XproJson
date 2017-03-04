@@ -6,12 +6,13 @@
 #define getc(ls) (((ls)->srclen--)>0 ? *((ls)->source++) : EOF)
 #define FIRST_RESERVED 257
 enum SYS_RESERVED {
-    K_FIRST = FIRST_RESERVED, K_NULL, K_TRUE, K_FALSE, K_STRING, K_NUMERAL, K_NAME, K_EOF
+    LEX_FIRST = FIRST_RESERVED, LEX_NULL, LEX_TRUE, LEX_FALSE, LEX_STRING, LEX_DOUBLE, LEX_INTEGER, LEX_NAME, LEX_EOF
 };
 
 typedef struct SemInfo {
     struct { int len; char* str; } s;
     xpro_Number n;
+    xpro_Integer i;
     xpro_Boolean b;
 } SemInfo;
 

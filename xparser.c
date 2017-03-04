@@ -11,7 +11,7 @@ static void expr(lexState* ls);
 
 
 static void check(lexState* ls, int c) {
-    error_check(ls->t.token == c, "Missing character \"%c\"", c);
+    error_check(ls->t.token == c, "Expecting \"%c\"", c);
 }
 
 static void check_next(lexState* ls, int c) {
@@ -45,8 +45,14 @@ static void statstring(lexState* ls) {
     parser_next(ls);
 }
 
-static void statnumeral(lexState* ls) {
+static void statdouble(lexState* ls) {
     XJson* value = create_double(ls->t.sem.n);
+    checkAddItem(ls, value);
+    parser_next(ls);
+}
+
+static void statinteger(lexState* ls) {
+    XJson* value = create_integer(ls->t.sem.i);
     checkAddItem(ls, value);
     parser_next(ls);
 }
@@ -58,7 +64,7 @@ static void statarray(lexState* ls) {
     changebase(ls, value);
     do {
         parser_next(ls);
-        if (ls->t.token == K_EOF)
+        if (ls->t.token == LEX_EOF)
             error_msg("Expecting 'string', 'number', 'null', 'true', 'false', '{', '['");
         if (ls->t.token == ']') {
             error_check(value->nchild == 0, "Expecting 'string', 'number', 'null', 'true', 'false', '{', '[' after ','");
@@ -79,13 +85,13 @@ static void statobject(lexState* ls) {
     changebase(ls, value);
     do {
         parser_next(ls);
-        if (ls->t.token == K_EOF)
+        if (ls->t.token == LEX_EOF)
             error_msg("Expecting 'string' after ','");
         if (ls->t.token == '}') {
             error_check(value->nchild == 0, "Expecting 'string' after ','");
             break; /* empty object */
         }
-        if (ls->t.token != K_STRING) error_msg("keys must be string.");  /* key can only be 'string' */
+        if (ls->t.token != LEX_STRING) error_msg("keys must be string.");  /* key can only be 'string' */
         
         char* key = realloc_(char, NULL, strlen(ls->t.sem.s.str) + 1);  /* save key */
         memcpy(key, ls->t.sem.s.str, strlen(ls->t.sem.s.str) + 1);
@@ -104,10 +110,11 @@ static void statement(lexState* ls) {
     switch (ls->t.token) {
         case '[': statarray(ls); break;
         case '{': statobject(ls); break;
-        case K_NULL: statnull(ls); break;
-        case K_TRUE: case K_FALSE: statboolean(ls); break;
-        case K_STRING: statstring(ls); break;
-        case K_NUMERAL: statnumeral(ls); break;
+        case LEX_NULL: statnull(ls); break;
+        case LEX_TRUE: case LEX_FALSE: statboolean(ls); break;
+        case LEX_STRING: statstring(ls); break;
+        case LEX_DOUBLE: statdouble(ls); break;
+        case LEX_INTEGER: statinteger(ls); break;
         default: error_check(0, "Unexpected expression \"%s\"", ls->t.sem.s.str);
     }
 }
@@ -125,9 +132,8 @@ XJson* main_parser(const char* jsonstr) {
     ls.current = getc(&ls);
     parser_next(&ls);
     statement(&ls);
-    error_check(ls.t.token == K_EOF, "Expecting 'EOF'");
+    error_check(ls.t.token == LEX_EOF, "Expecting 'EOF'");
     XJson* json = ls.json;
     xLex_free(&ls);
-    
     return json;
 }

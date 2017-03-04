@@ -75,7 +75,7 @@ XJson* xpro_create_bool(int b) {
 }
 
 XJson* xpro_create_int(xpro_Integer i) {
-    return create_double(i);  /* TODO */
+    return create_integer(i);  /* TODO */
 }
 
 XJson* xpro_create_double(xpro_Number n) {

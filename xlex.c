@@ -20,10 +20,10 @@ const char* const limits[TOTAL_LIMITS] = {
 #define save_and_next(ls, c) (save((ls), c), next(ls))
 #define settoken(ls, c) ((ls)->t.token = (c))
 
-
-#define isdigit(c) ((c)>='0'&&(c)<='9')
-#define isalphaA2Z(c) ((c)>='A'&&(c)<='Z')
-#define isalphaa2z(c) ((c)>='a'&&(c)<='z')
+#define inrange(c, lower, upper) ((c)>=(lower)&&(c)<=(upper))
+#define isdigit(c) inrange((c),'0','9')
+#define isalphaA2Z(c) inrange((c),'A','Z')
+#define isalphaa2z(c) inrange((c),'a','z')
 #define isalpha(c) (isalphaA2Z(c)||isalphaa2z(c))
 
 static void save(lexState* ls, int c) {
@@ -121,24 +121,71 @@ static void read_string(lexState* ls, int flag) {
     }  /* while */
     next(ls);
     
-    settoken(ls, K_STRING);
+    settoken(ls, LEX_STRING);
 }
 
 /*
 * number = [ "-" ] int [ frac ] [ exp ]
-* int = "0" / digit1-9 *digit
-* frac = "." 1*digit
+* integer = "0" / digit1-9 *digit
+* decimal = "." 1*digit
 * exp = ("e" / "E") ["-" / "+"] 1*digit
 */
 static void read_number(lexState* ls) {
-    do {
+    /* symbol */
+    if (ls->current == '-')
         save_and_next(ls, ls->current);
-    } while (isdigit(ls->current) || ls->current == '.' || ls->current == 'e' || ls->current == 'E' || ls->current == '+' || ls->current == '-');
+    
+    /* integer */
+    if (ls->current == '0') {
+        int c = ls->current;
+        next(ls);
+        if (isdigit(ls->current)) error_msg("leading 0 is not permitted in numbers");
+        save(ls, c);
+    }
+    else if (isdigit(ls->current)) {
+        do {
+            save_and_next(ls, ls->current);
+        } while (isdigit(ls->current));
+    }
+    else {
+        error_check(0, "invalid %s in number", ls->current);
+    }
+    /* [-] integer */
+    if (ls->current != '.' && ls->current != 'e' && ls->current != 'E') {
+        char* endstr;
+        int integer = strtod(ls->buff, &endstr);
+        xpro_assert(strcmp(endstr, "") == 0);
+        ls->t.sem.i = integer;
+        settoken(ls, LEX_INTEGER);
+        return;
+    }
+    
+    /* decimal */
+    if (ls->current == '.') {
+        int c = ls->current;
+        next(ls);
+        if (!isdigit(ls->current)) error_check(0, "at least one digit required in fractional part");
+        save(ls, c);
+        do {
+            save_and_next(ls, ls->current);
+        } while (isdigit(ls->current));
+    }
+    
+    /* exp */
+    if (ls->current == 'e' || ls->current == 'E') {
+        save_and_next(ls, ls->current);
+        if (ls->current == '+' || ls->current == '-') save_and_next(ls, ls->current);
+        if (!isdigit(ls->current)) error_check(0, "at least one digit required in exponent");
+        do {
+            save_and_next(ls, ls->current);
+        } while (isdigit(ls->current));
+    }
+    
     char* endstr;
     double numeral = strtod(ls->buff, &endstr);
     xpro_assert(strcmp(endstr, "") == 0);
     ls->t.sem.n = numeral;
-    settoken(ls, K_NUMERAL);
+    settoken(ls, LEX_DOUBLE);
 }
 
 void parser_next(lexState* ls) {
@@ -165,14 +212,14 @@ renext:
             return;
         }
         case EOF: {
-            settoken(ls, K_EOF);
+            settoken(ls, LEX_EOF);
             return;
         }
         default: {
             do {
                 save_and_next(ls, ls->current);
             } while (isdigit(ls->current) || isalpha(ls->current));
-            settoken(ls, K_NAME);
+            settoken(ls, LEX_NAME);
             
             for (int i = 0; i < TOTAL_LIMITS; ++i) {  /* reserverd string? */
                 if (strcmp(limits[i], ls->buff) == 0) {

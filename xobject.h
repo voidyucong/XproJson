@@ -6,7 +6,8 @@
 #define valueboolean(v) ((v)->v.b)
 #define valuestring(v) ((v)->v.s.s)
 #define valuestringlen(v) ((v)->v.s.len)
-#define valuenumeral(v) ((v)->v.n)
+#define valuedouble(v) ((v)->v.n)
+#define valueinteger(v) ((v)->v.i)
 
 
 typedef struct errState {
@@ -18,6 +19,7 @@ XPRO_API XJson* create_json();
 XPRO_API XJson* create_null();
 XPRO_API XJson* create_bool(int b);
 XPRO_API XJson* create_double(xpro_Number n);
+XPRO_API XJson* create_integer(xpro_Integer i);
 XPRO_API XJson* create_string(const char* str);
 XPRO_API XJson* create_array();
 XPRO_API XJson* create_object();
