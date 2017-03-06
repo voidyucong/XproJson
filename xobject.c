@@ -1,6 +1,8 @@
 #include "xobject.h"
 #include <stdlib.h>
 #include <stdarg.h>
+#include <math.h>
+#include <float.h>
 #include "xmem.h"
 #include "xlimits.h"
 
@@ -128,8 +130,15 @@ static void formatJson(printState* ps, char* str, xpro_Number n, xpro_Integer i,
     if (addkey) {sprintf(ctemp, "\"%s\":", addkey);ctemp+=strlen(addkey)+3;}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     if (str) {strncpy(ctemp, str, strlen(str));ctemp+=strlen(str);}
-    if (type == XPRO_TDOUBLE) {char nstr[32];sprintf(nstr, "%.17g", n);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
-    if (type == XPRO_TINTEGER) {char nstr[32];sprintf(nstr, "%d", i);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
+    if (type == XPRO_TDOUBLE) {
+        char nstr[64];
+        if (fabs(floor(n)-n) <= DBL_EPSILON && fabs(n) < 1.0e60)    sprintf(nstr,"%.0f",n);
+        else if (fabs(n) < 1.0e-6 || fabs(n) > 1.0e9)               sprintf(nstr,"%e",n);
+        else                                                    sprintf(nstr,"%f",n);
+        strncpy(ctemp, nstr, strlen(nstr));
+        ctemp+=strlen(nstr);
+    }
+    if (type == XPRO_TINTEGER) {char nstr[21];sprintf(nstr, "%lld", i);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
     if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
     *ctemp = '\0';
     ctemp = temp;  /* back to head */

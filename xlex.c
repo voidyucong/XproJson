@@ -63,16 +63,23 @@ static int handle_surrogate(lexState* ls) {
 }
 
 static void encodeutf8(lexState* ls, unsigned ucode) {
-    unsigned bytelen = 4;
-    if (ucode <= 0x007F) bytelen = 1;  /* 1 byte */
-    else if (ucode <= 0x7FF) bytelen = 2;  /* 2 byte */
-    else if (ucode <= 0xFFFF) bytelen = 3;  /* 3 byte */
-    
-    switch (bytelen) {
-        case 4: save(ls, (ucode >> 18) | 0xF0);
-        case 3: save(ls, ((ucode >> 12) & 0x3F) | 0x80);
-        case 2: save(ls, ((ucode >> 6) & 0x3F) | 0x80);
-        case 1: bytelen == 1 ? save(ls, ucode) : save(ls, (ucode & 0x3F) | 0x80);
+    if (ucode <= 0x007F) {  /* 1 byte */
+        save(ls, ucode);
+    }
+    else if (ucode <= 0x7FF) {  /* 2 byte */
+        save(ls, (ucode >> 6) | 0xC0);
+        save(ls, (ucode & 0x3F) | 0x80);
+    }
+    else if (ucode <= 0xFFFF) {  /* 3 byte */
+        save(ls, (ucode >> 12) | 0xE0);
+        save(ls, ((ucode >> 6) & 0x3F) | 0x80);
+        save(ls, (ucode & 0x3F) | 0x80);
+    }
+    else if (ucode <= 0x10FFFF) {  /* 4 byte */
+        save(ls, (ucode >> 18) | 0xF0);
+        save(ls, ((ucode >> 12) & 0x3F) | 0x80);
+        save(ls, ((ucode >> 6) & 0x3F) | 0x80);
+        save(ls, (ucode & 0x3F) | 0x80);
     }
 }
 
