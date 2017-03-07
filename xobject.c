@@ -93,118 +93,145 @@ typedef struct printState  {
     int size;
 } printState;
 
-static long __times = 0;
-static void formatJson(printState* ps, char* str, xpro_Number n, xpro_Integer i, char* key, int depth, int type) {
-    /* space */
-    char* space = NULL;
-    if (depth > 0) {
-        depth <<= 1;
-        space = realloc_(char, NULL, depth + 1);
-        memset(space, ' ', depth);
-    }
-    /* mark */
-    const char* mark = type == XPRO_TSTRING ? "\"" : NULL;
-    /* key */
-    const char* addkey = key ? key : NULL;
-    
-    size_t totalLen = 0;
-    totalLen += space?strlen(space):0;
-    totalLen += addkey?strlen(addkey)+3:0;
-    totalLen += mark?strlen(mark)*2:0;
-    totalLen += str?strlen(str):32;
-    
-    if (ps->n + totalLen >= ps->size) {
-        ps->size *= 1.5;
-        if (ps->size < ps->n + totalLen)
-            ps->size = (ps->n + totalLen) * 1.5;
+static void saves(printState* ps, char* str) {
+    size_t len = strlen(str);
+    size_t origlen = ps->n;
+    if (ps->n + len >= ps->size) {
+        ps->size = (ps->n + len) * 1.5;
         ps->buff = realloc_(char, ps->buff, ps->size);
     }
+    ps->n += len;
+    ps->buff += origlen;
+    memcpy(ps->buff, str, len);
+    ps->buff -= origlen;
     ps->buff[ps->n] = '\0';
-    
-    char* obuff = ps->buff;
-    ps->buff += ps->n;  /* to the tail */
-    
-    char temp[totalLen];
-    char* ctemp = temp;
-    if (space) {strncpy(ctemp, space, strlen(space));ctemp+=depth;}
-    if (addkey) {sprintf(ctemp, "\"%s\":", addkey);ctemp+=strlen(addkey)+3;}
-    if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
-    if (str) {strncpy(ctemp, str, strlen(str));ctemp+=strlen(str);}
-    if (type == XPRO_TDOUBLE) {
-        char nstr[64];
-        if (fabs(floor(n)-n) <= DBL_EPSILON && fabs(n) < 1.0e60)    sprintf(nstr,"%.0f",n);
-        else if (fabs(n) < 1.0e-6 || fabs(n) > 1.0e9)               sprintf(nstr,"%e",n);
-        else                                                    sprintf(nstr,"%f",n);
-        strncpy(ctemp, nstr, strlen(nstr));
-        ctemp+=strlen(nstr);
+}
+
+static void savec(printState* ps, int c) {
+    if (ps->n + 1 >= ps->size) {
+        ps->size *= 1.5f;  /* resize */
+        ps->buff = realloc_(char, ps->buff, ps->size);
     }
-    if (type == XPRO_TINTEGER) {char nstr[21];sprintf(nstr, "%lld", i);strncpy(ctemp, nstr, strlen(nstr));ctemp+=strlen(nstr);}
-    if (mark) {strncpy(ctemp, mark, strlen(mark));ctemp+=strlen(mark);}
-    *ctemp = '\0';
-    ctemp = temp;  /* back to head */
-    
-    ps->n += strlen(ctemp);
-    memcpy(ps->buff, temp, strlen(ctemp));
-    
-    ps->buff = obuff;  /* back to head */
+    ps->buff[ps->n++] = (char)c;
     ps->buff[ps->n] = '\0';
-    if (depth > 0) free(space); space = NULL;
 }
 
-static void saveString(printState* ps, char* str, char* key, int depth, int type) {
-    formatJson(ps, str, 0, 0, key, depth, type);
+static long __times = 0;
+
+static void print_retract(printState* ps, int depth) {
+    /* space */
+    if (depth <= 0) return;
+    depth <<= 1;
+    char* space = realloc_(char, NULL, depth + 1);
+    memset(space, ' ', depth);
+    space[depth] = '\0';
+    saves(ps, space);
+    xMem_free(space);
 }
 
-static void saveDouble(printState* ps, xpro_Number n, char* key, int depth, int type) {
-    formatJson(ps, NULL, n, 0, key, depth, type);
+static void print_str(printState* ps, char* str) {
+    if (!str)
+    {
+        saves(ps, "\"\"");
+        return;
+    }
+    char* pstr = str;
+    saves(ps, "\"");
+    while (*pstr) {
+        if (*pstr > 31 && *pstr != '\"' && *pstr != '\\') savec(ps, *pstr++);
+        else {
+            switch (*pstr) {
+                case '\\': saves(ps, "\\\\"); break;
+                case '\"': saves(ps, "\\\""); break;
+                case '\a': saves(ps, "\\a"); break;
+                case '\b': saves(ps, "\\b"); break;
+                case '\f': saves(ps, "\\f"); break;
+                case '\n': saves(ps, "\\n"); break;
+                case '\r': saves(ps, "\\r"); break;
+                case '\t': saves(ps, "\\t"); break;
+                case '\v': saves(ps, "\\v"); break;
+                default: { char arr[5]; sprintf(arr,"u%04x", *pstr); saves(ps, arr); break; }
+            }
+            pstr++;
+        }
+    }
+    saves(ps, "\"");
 }
 
-static void saveInteger(printState* ps, xpro_Integer i, char* key, int depth, int type) {
-    formatJson(ps, NULL, 0, i, key, depth, type);
+static void print_key(printState* ps, char* key) {
+    if (!key) return;
+    print_str(ps, key);
+    savec(ps, ':');
 }
 
 static void print_value(XJson* v, printState* ps);
 
 static void print_null(XJson* v, printState* ps) {
-    saveString(ps, "null", v->key, v->level, v->t);
+    print_retract(ps, v->level);
+    print_key(ps, v->key);
+    saves(ps, "null");
 }
 
 static void print_bool(XJson* v, printState* ps) {
-    saveString(ps, valueboolean(v) == 1 ? "true" : "false", v->key, v->level, v->t);
+    print_retract(ps, v->level);
+    print_key(ps, v->key);
+    saves(ps, valueboolean(v) == 1 ? "true" : "false");
 }
 
 static void print_double(XJson* v, printState* ps) {
-    saveDouble(ps, valuedouble(v), v->key, v->level, v->t);
+    print_retract(ps, v->level);
+    print_key(ps, v->key);
+    
+    xpro_Number n = valuedouble(v);
+    char nstr[64];
+    if (fabs(floor(n)-n) <= DBL_EPSILON && fabs(n) < 1.0e60)    sprintf(nstr,"%.0f",n);
+    else if (fabs(n) < 1.0e-6 || fabs(n) > 1.0e9)               sprintf(nstr,"%e",n);
+    else                                                    sprintf(nstr,"%f",n);
+    saves(ps, nstr);
 }
 
 static void print_integer(XJson* v, printState* ps) {
-    saveInteger(ps, valueinteger(v), v->key, v->level, v->t);
+    print_retract(ps, v->level);
+    print_key(ps, v->key);
+    
+    xpro_Integer i = valueinteger(v);
+    char nstr[21];
+    sprintf(nstr, "%lld", i);
+    saves(ps, nstr);
 }
 
 static void print_string(XJson* v, printState* ps) {
-    saveString(ps, valuestring(v), v->key, v->level, v->t);
+    print_retract(ps, v->level);
+    print_key(ps, v->key);
+    print_str(ps, valuestring(v));
 }
 
 static void print_array(XJson* v, printState* ps) {
     XJson* child = v->stack;
-    saveString(ps, "[\n", v->key, v->level, v->t);
+    print_retract(ps, v->level);
+    print_key(ps, v->key);
+    saves(ps, "[\n");
     while (child) {
         print_value(child, ps);
         child = child->next;
-        saveString(ps, child?",\n":"\n", NULL, 0, XPRO_TNULL);
+        saves(ps, child?",\n":"\n");
     }
-    saveString(ps, "]", NULL, v->level, v->t);
+    print_retract(ps, v->level);
+    saves(ps, "]");
 }
 
 static void print_object(XJson* v, printState* ps) {
     XJson* child = v->stack;
-    saveString(ps, "{\n", v->key, v->level, v->t);
+    print_retract(ps, v->level);
+    print_key(ps, v->key);
+    saves(ps, "{\n");
     while (child) {
         print_value(child, ps);
         child = child->next;
-        saveString(ps, child?",\n":"\n", NULL, 0, XPRO_TNULL);
+        saves(ps, child?",\n":"\n");
     }
-    saveString(ps, "}", NULL, v->level, v->t);
+    print_retract(ps, v->level);
+    saves(ps, "}");
 }
 
 static void print_value(XJson* v, printState* ps) {
@@ -226,6 +253,7 @@ char* print_json(XJson* json) {
     ps.n = 0;
     ps.size = 32;
     ps.buff = realloc_(char, NULL, ps.size);
+    memset(ps.buff, 0, ps.size);
     print_value(json, &ps);
 /*    printf("use %ldms\n", __times); */
     return ps.buff;
