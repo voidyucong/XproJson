@@ -70,7 +70,7 @@ inline XJson* create_object() {
 inline void free_json(XJson* value) {
     if (value == NULL) return;
     while (value) {
-        free_value(value->top);
+        free_json(value->top);
         XJson* prev = value->prev;
         if (value->key) xMem_free((void*)value->key);
         if (value->t==XPRO_TSTRING) xMem_free(value->v.s.s);
