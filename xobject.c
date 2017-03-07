@@ -67,6 +67,20 @@ inline XJson* create_object() {
     return value;
 }
 
+inline void free_json(XJson* value) {
+    if (value == NULL) return;
+    while (value) {
+        free_value(value->top);
+        XJson* prev = value->prev;
+        if (value->key) xMem_free((void*)value->key);
+        if (value->t==XPRO_TSTRING) xMem_free(value->v.s.s);
+        value->prev = value->next = value->top = value->stack = NULL;
+        value->key = NULL;
+        xMem_free((void*)value);
+        value = prev;
+    }
+}
+
 void addItem(XJson* parent, XJson* item) {
     xpro_assert(parent->t == XPRO_TARRAY || parent->t == XPRO_TOBJECT);
     
@@ -116,8 +130,7 @@ static void savec(printState* ps, int c) {
     ps->buff[ps->n] = '\0';
 }
 
-static long __times = 0;
-
+/* 添加缩进 */
 static void print_retract(printState* ps, int depth) {
     /* space */
     if (depth <= 0) return;
@@ -129,6 +142,7 @@ static void print_retract(printState* ps, int depth) {
     xMem_free(space);
 }
 
+/* 处理转移字符、添加" " */
 static void print_str(printState* ps, char* str) {
     if (!str)
     {
@@ -255,7 +269,6 @@ char* print_json(XJson* json) {
     ps.buff = realloc_(char, NULL, ps.size);
     memset(ps.buff, 0, ps.size);
     print_value(json, &ps);
-/*    printf("use %ldms\n", __times); */
     return ps.buff;
 }
 

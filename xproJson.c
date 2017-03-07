@@ -28,23 +28,9 @@ XJson* xpro_parserFile(const char* fileName) {
     return json;
 }
 
-static void free_value(XJson* value) {
-    if (value == NULL) return;
-    while (value) {
-        free_value(value->top);
-        XJson* prev = value->prev;
-        if (value->key) xMem_free((void*)value->key);
-        if (value->t==XPRO_TSTRING) xMem_free(value->v.s.s);
-        value->prev = value->next = value->top = value->stack = NULL;
-        value->key = NULL;
-        xMem_free((void*)value);
-        value = prev;
-    }
-}
-
 void xpro_free(XJson* json) {
     if (json == NULL) return;
-    free_value(json);
+    free_json(json);
     json = NULL;
 }
 

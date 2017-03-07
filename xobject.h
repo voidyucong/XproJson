@@ -24,6 +24,8 @@ XPRO_API XJson* create_string(const char* str);
 XPRO_API XJson* create_array();
 XPRO_API XJson* create_object();
 
+XPRO_API void free_json(XJson* value);
+
 XPRO_API void addItem(XJson* parent, XJson* item);
 
 XPRO_API char* print_json(XJson* json);
