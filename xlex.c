@@ -105,9 +105,6 @@ static void read_string(lexState* ls, int flag) {
                         encodeutf8(ls, ucode);
                         goto no_save_flag;
                     }
-                    case '\n': case '\r': case '\\': case '\"': case '\'':
-                        c = ls->current;
-                        goto save_flag;
                     default:
                         c =ls->current;
                         goto save_flag;
@@ -121,7 +118,7 @@ static void read_string(lexState* ls, int flag) {
                 break;
             }
             default:
-                if (ls->current == EOF) error_msg("Unexpected end!");
+                if (ls->current == EOF) error_msg("Unexpected 'EOF'");
                 save_and_next(ls, ls->current);
                 break;
         }  /* switch */
