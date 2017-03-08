@@ -10,11 +10,6 @@
 #define valueinteger(v) ((v)->v.i)
 
 
-typedef struct errState {
-    ERR_FUNC errfunc;
-} errState;
-
-
 XPRO_API XJson* create_json();
 XPRO_API XJson* create_null();
 XPRO_API XJson* create_bool(int b);

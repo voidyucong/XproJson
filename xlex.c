@@ -14,7 +14,7 @@ const char* const limits[TOTAL_LIMITS] = {
 
 #define reset_buff(ls)  \
  (ls)->n = 0; \
- memset((ls)->buff, 0, (ls)->buffsize); \
+// memset((ls)->buff, 0, (ls)->buffsize); \
 
 #define next(ls) ((ls)->current = getc(ls))
 #define save_and_next(ls, c) (save((ls), c), next(ls))
@@ -32,6 +32,7 @@ static void save(lexState* ls, int c) {
         ls->buff = realloc_(char, ls->buff, ls->buffsize);
     }
     ls->buff[ls->n++] = (char)c;
+    ls->buff[ls->n] = '\0';
 }
 
 static void read_hex4(lexState* ls, unsigned* ucode) {

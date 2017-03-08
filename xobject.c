@@ -6,6 +6,10 @@
 #include "xmem.h"
 #include "xlimits.h"
 
+typedef struct errState {
+    ERR_FUNC errfunc;
+} errState;
+
 static errState es = {NULL};
 
 XJson* create_json() {
@@ -39,7 +43,7 @@ inline XJson* create_string(const char* str) {
     value->t = XPRO_TSTRING;
     value->v.s.len = (int)strlen(str) + 1;
     value->v.s.s = realloc_(char, NULL, (unsigned long)value->v.s.len + 1);
-    memcpy(value->v.s.s, str, strlen(str) + 1);
+    memcpy(value->v.s.s, str, value->v.s.len);
     return value;
 }
 inline XJson* create_double(xpro_Number n) {

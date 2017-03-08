@@ -133,7 +133,7 @@ void xpro_deleteItemInOjbect(XJson* object, const char* key) {
 
 XJson* xpro_getItemInArray(XJson* array, int index) {
     XJson* value = array->stack;
-    while (value && --index > 0) value = value->next;
+    while (value && index-- > 0) value = value->next;
     return value;
 }
 

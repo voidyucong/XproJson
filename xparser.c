@@ -93,8 +93,9 @@ static void statobject(lexState* ls) {
         }
         if (ls->t.token != LEX_STRING) error_msg("keys must be string.");  /* key can only be 'string' */
         
-        char* key = realloc_(char, NULL, strlen(ls->t.sem.s.str) + 1);  /* save key */
-        memcpy(key, ls->t.sem.s.str, strlen(ls->t.sem.s.str) + 1);
+        size_t len = strlen(ls->t.sem.s.str) + 1;
+        char* key = realloc_(char, NULL, len);  /* save key */
+        memcpy(key, ls->t.sem.s.str, len);
         check_next(ls, ':');
         parser_next(ls);  /* skip ':' */
         expr(ls);
