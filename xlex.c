@@ -106,9 +106,7 @@ static void read_string(lexState* ls, int flag) {
                         encodeutf8(ls, ucode);
                         goto no_save_flag;
                     }
-                    default:
-                        c =ls->current;
-                        goto save_flag;
+                    default: c =ls->current; goto save_flag;
                 }  /* switch */
                 break;
             save_flag:

@@ -40,8 +40,8 @@ typedef struct XJson {
 } XJson;
 
 
-XPRO_API XJson* xpro_parser(const char* jsonstr);
-XPRO_API XJson* xpro_parserFile(const char* fileName);
+XPRO_API XJson* xpro_parse(const char* jsonstr);
+XPRO_API XJson* xpro_parseFile(const char* fileName);
 XPRO_API void xpro_free(XJson* json);
 
 XPRO_API char* xpro_print(XJson* json);

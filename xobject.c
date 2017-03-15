@@ -228,7 +228,7 @@ static void print_array(XJson* v, printState* ps) {
     XJson* child = v->stack;
     print_retract(ps, v->level);
     print_key(ps, v->key);
-    saves(ps, "[\n");
+    saves(ps, child?"[\n":"[");
     while (child) {
         print_value(child, ps);
         child = child->next;
@@ -242,7 +242,7 @@ static void print_object(XJson* v, printState* ps) {
     XJson* child = v->stack;
     print_retract(ps, v->level);
     print_key(ps, v->key);
-    saves(ps, "{\n");
+    saves(ps, child?"{\n":"{");
     while (child) {
         print_value(child, ps);
         child = child->next;

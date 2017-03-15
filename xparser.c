@@ -7,8 +7,7 @@
 
 #define changebase(ls, b) (b?(ls)->curbase=(b):0)
 
-static void expr(lexState* ls);
-
+static void statement(lexState* ls);
 
 static void check(lexState* ls, int c) {
     error_check(ls->t.token == c, "Expecting \"%c\"", c);
@@ -70,7 +69,7 @@ static void statarray(lexState* ls) {
             error_check(value->nchild == 0, "Expecting 'string', 'number', 'null', 'true', 'false', '{', '[' after ','");
             break; /* empty array */
         }
-        expr(ls);
+        statement(ls);
     } while (ls->t.token == ',');
     
     changebase(ls, parent);
@@ -98,7 +97,7 @@ static void statobject(lexState* ls) {
         memcpy(key, ls->t.sem.s.str, len);
         check_next(ls, ':');
         parser_next(ls);  /* skip ':' */
-        expr(ls);
+        statement(ls);
         ls->curbase->top->key = key;  /* set last child's key */
     } while (ls->t.token == ',');
     
@@ -117,13 +116,6 @@ static void statement(lexState* ls) {
         case LEX_DOUBLE: statdouble(ls); break;
         case LEX_INTEGER: statinteger(ls); break;
         default: error_check(0, "Unexpected expression \"%s\"", ls->t.sem.s.str);
-    }
-}
-
-static void expr(lexState* ls) {
-    switch (ls->t.token) {
-//        case '}': case ']': break;
-        default: statement(ls); break;
     }
 }
 

@@ -8,11 +8,11 @@
 #include "xmem.h"
 
 
-XJson* xpro_parser(const char* jsonstr) {
+XJson* xpro_parse(const char* jsonstr) {
     return main_parser(jsonstr);
 }
 
-XJson* xpro_parserFile(const char* fileName) {
+XJson* xpro_parseFile(const char* fileName) {
     FILE* f = fopen(fileName, "r+");
     assert(f);
     if (!f) return NULL;
