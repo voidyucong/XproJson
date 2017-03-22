@@ -168,7 +168,7 @@ static void print_str(printState* ps, char* str) {
                 case '\r': saves(ps, "\\r"); break;
                 case '\t': saves(ps, "\\t"); break;
                 case '\v': saves(ps, "\\v"); break;
-                default: { char arr[5]; sprintf(arr,"u%04x", *pstr); saves(ps, arr); break; }
+                default: { savec(ps, *pstr); break; }
             }
             pstr++;
         }
