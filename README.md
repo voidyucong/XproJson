@@ -14,4 +14,3 @@ printf("%s\n", xpro_print(array));
 xpro_free(array);
 ```
 
-现在的异常提醒是个shit!!!待优化...
